@@ -31,15 +31,14 @@ def negative_sampler(unique: bool,
   """
   if isinstance(algorithm, typing.Text):
     algorithm = cs_config_pb2.NegativeSamplerConfig.Sampler.Value(algorithm)
-  if isinstance(algorithm, int):
-    if algorithm not in [
-        cs_config_pb2.NegativeSamplerConfig.UNIFORM,
-        cs_config_pb2.NegativeSamplerConfig.LOG_UNIFORM
-    ]:
-      raise ValueError('Invalid sampler type.')
-  else:
+  if not isinstance(algorithm, int):
     raise ValueError('Invalid input: %r' % algorithm)
 
+  if algorithm not in [
+      cs_config_pb2.NegativeSamplerConfig.UNIFORM,
+      cs_config_pb2.NegativeSamplerConfig.LOG_UNIFORM
+  ]:
+    raise ValueError('Invalid sampler type.')
   return cs_config_pb2.NegativeSamplerConfig(unique=unique, sampler=algorithm)
 
 
@@ -59,12 +58,11 @@ def brute_force_topk_sampler(
   """
   if isinstance(similarity_type, typing.Text):
     similarity_type = cs_config_pb2.SimilarityType.Value(similarity_type)
-  if isinstance(similarity_type, int):
-    if similarity_type not in [cs_config_pb2.COSINE, cs_config_pb2.DOT_PRODUCT]:
-      raise ValueError('Invalid similarity type.')
-  else:
+  if not isinstance(similarity_type, int):
     raise ValueError('Invalid input: %r' % similarity_type)
 
+  if similarity_type not in [cs_config_pb2.COSINE, cs_config_pb2.DOT_PRODUCT]:
+    raise ValueError('Invalid similarity type.')
   return cs_config_pb2.BruteForceTopkSamplerConfig(
       similarity_type=similarity_type)
 
@@ -83,8 +81,13 @@ def build_candidate_sampler_config(
   Raises:
     ValueError if `sampler` is not valid.
   """
-  if not (isinstance(sampler, cs_config_pb2.NegativeSamplerConfig) or
-          isinstance(sampler, cs_config_pb2.BruteForceTopkSamplerConfig)):
+  if not (isinstance(
+      sampler,
+      (
+          cs_config_pb2.NegativeSamplerConfig,
+          cs_config_pb2.BruteForceTopkSamplerConfig,
+      ),
+  )):
     raise ValueError(
         'sampler must be one of NegativeSamplerConfig or BruteForceTopkSamplerConfig'
     )

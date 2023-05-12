@@ -366,8 +366,8 @@ class TrainerAgreement(Trainer):
                                                     update_rate)
     else:
       return NotImplementedError(
-          'Schedule %s is not implemented for the weight decay variable.' %
-          str(weight_decay_schedule))
+          f'Schedule {str(weight_decay_schedule)} is not implemented for the weight decay variable.'
+      )
     return weight_decay_var, weight_decay_update
 
   def _create_counter(self):
@@ -386,13 +386,12 @@ class TrainerAgreement(Trainer):
       neighbors, agreement_labels = next(data_iterator)
       src_features = self.data.get_features(neighbors[:, 0])
       tgt_features = self.data.get_features(neighbors[:, 1])
-      feed_dict = {
+      return {
           self.src_features: src_features,
           self.tgt_features: tgt_features,
           self.labels: agreement_labels,
-          self.is_train: is_train
+          self.is_train: is_train,
       }
-      return feed_dict
     except StopIteration:
       # If the iterator has finished, return None.
       return None
@@ -426,9 +425,7 @@ class TrainerAgreement(Trainer):
         self.tgt_features: tgt_features,
         self.labels: agreement_labels.astype(np.float32)
     }
-    # Evaluate agreement.
-    acc = session.run(self.accuracy, feed_dict=feed_dict)
-    return acc
+    return session.run(self.accuracy, feed_dict=feed_dict)
 
   def _eval_train(self, session, feed_dict):
     """Computes the accuracy of the predictions for the provided batch.
@@ -454,15 +451,9 @@ class TrainerAgreement(Trainer):
     targ = targ.astype(np.int32)
     acc_per_sample = binary_pred == targ
     acc_1 = acc_per_sample[targ == 1]
-    if acc_1.shape[0] > 0:
-      acc_1 = sum(acc_1) / np.float32(len(acc_1))
-    else:
-      acc_1 = -1
+    acc_1 = sum(acc_1) / np.float32(len(acc_1)) if acc_1.shape[0] > 0 else -1
     acc_0 = acc_per_sample[targ == 0]
-    if acc_0.shape[0] > 0:
-      acc_0 = sum(acc_0) / np.float32(len(acc_0))
-    else:
-      acc_0 = -1
+    acc_0 = sum(acc_0) / np.float32(len(acc_0)) if acc_0.shape[0] > 0 else -1
     return train_acc, acc_0, acc_1
 
   def _eval_validation(self, data_iterator_val, num_samples_val, session):
@@ -553,13 +544,10 @@ class TrainerAgreement(Trainer):
     """
     # Compute how many of each label we have.
     label_counts = collections.Counter(labels)
-    label_counts = np.asarray([count for count in label_counts.values()])
+    label_counts = np.asarray(list(label_counts.values()))
     # Convert the counts to ratios.
     label_counts = label_counts / np.sum(label_counts).astype(np.float32)
-    # Use the ratios to compute the probability that a randomly sampled pair
-    # of samples will have the same label.
-    ratio = np.sum([r * r for r in label_counts])
-    return ratio
+    return np.sum([r * r for r in label_counts])
 
   def train(self, data, session=None, **kwargs):
     """Train an agreement model."""

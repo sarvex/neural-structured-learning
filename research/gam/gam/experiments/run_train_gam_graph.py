@@ -293,11 +293,11 @@ def main(argv):
   ############################################################################
   # Put together parameters to create a model name.
   model_name = FLAGS.model_cls
-  model_name += ('_' + FLAGS.hidden_cls) if FLAGS.model_cls == 'mlp' else ''
-  model_name += '-' + FLAGS.model_agr
-  model_name += ('_' + FLAGS.hidden_agr) if FLAGS.model_agr == 'mlp' else ''
-  model_name += '-aggr_' + FLAGS.aggregation_agr_inputs
-  model_name += ('_' + FLAGS.hidden_aggreg) if FLAGS.hidden_aggreg else ''
+  model_name += f'_{FLAGS.hidden_cls}' if FLAGS.model_cls == 'mlp' else ''
+  model_name += f'-{FLAGS.model_agr}'
+  model_name += f'_{FLAGS.hidden_agr}' if FLAGS.model_agr == 'mlp' else ''
+  model_name += f'-aggr_{FLAGS.aggregation_agr_inputs}'
+  model_name += f'_{FLAGS.hidden_aggreg}' if FLAGS.hidden_aggreg else ''
   model_name += (
       '-add_%d-conf_%.2f-iterCls_%d-iterAgr_%d-batchCls_%d' %
       (FLAGS.num_samples_to_label, FLAGS.min_confidence_new_label,
@@ -318,7 +318,7 @@ def main(argv):
   model_name += '-L2' if FLAGS.use_l2_cls else '-CE'
   model_name += '-graph' if FLAGS.use_graph else '-noGraph'
   model_name += '-rowNorm' if FLAGS.row_normalize else ''
-  model_name += '-seed_' + str(FLAGS.seed)
+  model_name += f'-seed_{str(FLAGS.seed)}'
   model_name += FLAGS.experiment_suffix
   logging.info('Model name: %s', model_name)
 

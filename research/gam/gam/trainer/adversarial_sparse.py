@@ -137,8 +137,7 @@ def generate_virtual_adversarial_perturbation(inputs,
 def logsoftmax(x):
   """Softmax where the inputs are logits and the outputs remain logits."""
   xdev = x - tf.reduce_max(x, 1, keep_dims=True)
-  lsm = xdev - tf.log(tf.reduce_sum(tf.exp(xdev), 1, keep_dims=True))
-  return lsm
+  return xdev - tf.log(tf.reduce_sum(tf.exp(xdev), 1, keep_dims=True))
 
 
 def entropy_y_x(logits, mask):

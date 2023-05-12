@@ -59,8 +59,7 @@ class TransH(BaseH):
     c = tf.math.softplus(self.c)
     lhs = hyp_utils.expmap0(self.entity(input_tensor[:, 0]), c)
     rel = hyp_utils.expmap0(self.rel(input_tensor[:, 1]), c)
-    res = hyp_utils.mobius_add(lhs, rel, c)
-    return res
+    return hyp_utils.mobius_add(lhs, rel, c)
 
 
 class RotH(BaseH):

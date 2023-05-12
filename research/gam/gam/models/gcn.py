@@ -49,11 +49,7 @@ def sparse_dropout(x, keep_prob, noise_shape):
 
 def dot(x, y, sparse=False):
   """Wrapper for tf.matmul (sparse vs dense)."""
-  if sparse:
-    res = tf.sparse_tensor_dense_matmul(x, y)
-  else:
-    res = tf.matmul(x, y)
-  return res
+  return tf.sparse_tensor_dense_matmul(x, y) if sparse else tf.matmul(x, y)
 
 
 class GCN(Model):
@@ -126,7 +122,7 @@ class GCN(Model):
         parameters which will be used for regularization.
     """
     # Build layers.
-    with tf.variable_scope(self.name + '/encoding'):
+    with tf.variable_scope(f'{self.name}/encoding'):
       hidden, reg_params = self._construct_encoding(inputs, is_train, support,
                                                     num_features_nonzero)
 
@@ -187,7 +183,7 @@ class GCN(Model):
     num_features_nonzero = kwargs['num_features_nonzero']
 
     # Build layers.
-    with tf.variable_scope(self.name + '/prediction'):
+    with tf.variable_scope(f'{self.name}/prediction'):
       dropout = (
           tf.constant(self.dropout, tf.float32) * tf.cast(is_train, tf.float32))
 
@@ -244,7 +240,7 @@ class GCN(Model):
       loss: The cummulated loss value.
     """
     reg_params = reg_params if reg_params is not None else {}
-    weight_decay = kwargs['weight_decay'] if 'weight_decay' in kwargs else None
+    weight_decay = kwargs.get('weight_decay', None)
 
     with tf.name_scope(name_scope):
       # Cross entropy error.
@@ -294,7 +290,7 @@ class GraphConvolution(object):
                name=None):
     if not name:
       layer = self.__class__.__name__.lower()
-      name = layer + '_' + str(get_layer_uid(layer))
+      name = f'{layer}_{str(get_layer_uid(layer))}'
 
     self.name = name
     self.vars = {}
@@ -308,7 +304,7 @@ class GraphConvolution(object):
     # Helper variable for sparse dropout.
     self.num_features_nonzero = num_features_nonzero
 
-    with tf.variable_scope(self.name + '_vars'):
+    with tf.variable_scope(f'{self.name}_vars'):
       self.vars['weights'] = tf.get_variable(
           name='weights', initializer=glorot([input_dim, output_dim]))
       if self.bias:
@@ -317,8 +313,7 @@ class GraphConvolution(object):
 
   def __call__(self, inputs):
     with tf.name_scope(self.name):
-      outputs = self._call(inputs)
-      return outputs
+      return self._call(inputs)
 
   def _call(self, inputs):
     """Run over inputs."""

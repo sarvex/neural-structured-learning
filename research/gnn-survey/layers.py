@@ -48,16 +48,10 @@ class GraphConvLayer(tf.keras.layers.Layer):
 
   def call(self, inputs):
     x, adj = inputs[0], inputs[1]
-    if self.sparse:
-      x = tf.sparse.sparse_dense_matmul(adj, x)
-    else:
-      x = tf.matmul(adj, x)
+    x = tf.sparse.sparse_dense_matmul(adj, x) if self.sparse else tf.matmul(adj, x)
     outputs = tf.matmul(x, self.weight)
 
-    if self.bias:
-      return self.b + outputs
-    else:
-      return outputs
+    return self.b + outputs if self.bias else outputs
 
 
 class GraphAttnLayer(tf.keras.layers.Layer):
@@ -115,8 +109,7 @@ class GraphAttnLayer(tf.keras.layers.Layer):
     attn = tf.nn.softmax(attn, axis=1)
 
     attn = self.dropout(attn)
-    output = tf.matmul(attn, x)
-    return output
+    return tf.matmul(attn, x)
 
 
 class SparseGraphAttnLayer(tf.keras.layers.Layer):
@@ -186,8 +179,7 @@ class SparseGraphAttnLayer(tf.keras.layers.Layer):
         values=self.dropout(attn.values),
         dense_shape=attn.dense_shape)
 
-    output = tf.sparse.sparse_dense_matmul(attn, x)
-    return output
+    return tf.sparse.sparse_dense_matmul(attn, x)
 
 
 class GraphIsomorphismLayer(tf.keras.layers.Layer):
@@ -220,8 +212,8 @@ class GraphIsomorphismLayer(tf.keras.layers.Layer):
     self.relu = tf.keras.layers.ReLU()
     self.dropout = tf.keras.layers.Dropout(self.dropout_rate)
     self.batch_norm = []
-    for _ in range(self.mlp_layers - 1):
-      self.batch_norm.append(tf.keras.layers.BatchNormalization())
+    self.batch_norm.extend(tf.keras.layers.BatchNormalization()
+                           for _ in range(self.mlp_layers - 1))
     self.weight = []
 
   def build(self, input_shape):
@@ -230,17 +222,19 @@ class GraphIsomorphismLayer(tf.keras.layers.Layer):
       if i == 0:
         self.weight.append(
             self.add_weight(
-                name='weight' + str(i + 1),
+                name=f'weight{str(i + 1)}',
                 shape=(input_shape[0][-1], self.output_dim),
                 initializer='glorot_normal',
-                trainable=True))
+                trainable=True,
+            ))
       else:
         self.weight.append(
             self.add_weight(
-                name='weight' + str(i + 1),
+                name=f'weight{str(i + 1)}',
                 shape=(self.output_dim, self.output_dim),
                 initializer='glorot_normal',
-                trainable=True))
+                trainable=True,
+            ))
     if self.learn_eps:
       self.eps = self.add_weight(
           name='epsilon',

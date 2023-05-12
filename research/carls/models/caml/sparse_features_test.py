@@ -134,12 +134,12 @@ class FeatureEmbeddingTest(tf.test.TestCase, parameterized.TestCase):
       self.assertEqual((2, 5), emb.shape)
       self.assertEqual(5, vc.shape)
       self.assertEqual((2, 2), sigma.shape)
-      self.assertEqual((2, 2, 5), input_embed.shape)
     else:
       self.assertAllClose([[1] * 5, [1] * 5], emb)
       self.assertIsNone(vc)
       self.assertIsNone(sigma)
-      self.assertEqual((2, 2, 5), input_embed.shape)
+
+    self.assertEqual((2, 2, 5), input_embed.shape)
 
   @parameterized.named_parameters(('with_sigma', 3), ('without_sigma', 0))
   def test_single_feature_lookup_1D(self, sigma_dimension):

@@ -121,8 +121,7 @@ def build_base_model(hparams):
   for num_hidden_units in hparams.dense_units:
     x = tf.keras.layers.Dense(num_hidden_units, activation='relu')(x)
   pred = tf.keras.layers.Dense(hparams.num_classes, activation='softmax')(x)
-  model = tf.keras.Model(inputs=inputs, outputs=pred)
-  return model
+  return tf.keras.Model(inputs=inputs, outputs=pred)
 
 
 def apply_adversarial_regularization(model, hparams):
@@ -217,9 +216,9 @@ def main(argv):
       base_model, hparams, train_dataset, test_dataset)
 
   for metric_name, result in base_result:
-    print('Eval %s for base model: %s' % (metric_name, result))
+    print(f'Eval {metric_name} for base model: {result}')
   for metric_name, result in adv_result:
-    print('Eval %s for adversarial model: %s' % (metric_name, result))
+    print(f'Eval {metric_name} for adversarial model: {result}')
 
   models = {
       'base': base_model,

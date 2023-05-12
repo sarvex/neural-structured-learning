@@ -28,13 +28,12 @@ def attention_kbc_model(config, train_graph, is_train_ph, input_tensors):
     # if reuse:
     #   tf_scope.reuse_variables()
   s, nbrs_s, r, candidates, nbrs_candidates = input_tensors
-  model = {}
   entity_encoder = encoders.EmbeddingLookup(
       config.emb_dim, is_train_ph, train_dropout=config.entity_encoder_dropout,
       input_dim=train_graph.ent_vocab_size,
       scope="entity_embeddings"
   )
-  model["entity_encoder"] = entity_encoder
+  model = {"entity_encoder": entity_encoder}
   if config.use_separate_attention_emb:
     init_entity_encoder = encoders.EmbeddingLookup(
         config.emb_dim, is_train_ph,
@@ -131,13 +130,12 @@ def source_attention_kbc_model(
     s, nbrs_s, text_nbrs_s, r, candidates = input_tensors
   else:
     s, nbrs_s, r, candidates = input_tensors
-  model = {}
   entity_encoder = encoders.EmbeddingLookup(
       config.emb_dim, is_train_ph, train_dropout=config.entity_encoder_dropout,
       input_dim=train_graph.ent_vocab_size,
       scope="entity_embeddings", num_ps_tasks=None
   )
-  model["entity_encoder"] = entity_encoder
+  model = {"entity_encoder": entity_encoder}
   relation_encoder = encoders.EmbeddingLookup(
       config.emb_dim, is_train_ph,
       train_dropout=config.relation_encoder_dropout,
@@ -349,14 +347,12 @@ def source_attention_kbc_model(
 def distmult_kbc_model(config, train_graph, is_train_ph, input_tensors):
   """Use DistMult model to score candidates for kbc."""
   s, r, candidates = input_tensors
-  model = {}
   entity_encoder = encoders.EmbeddingLookup(
       config.emb_dim, is_train_ph, train_dropout=config.entity_encoder_dropout,
       input_dim=train_graph.ent_vocab_size,
       scope="entity_embeddings", use_tanh=config.use_tanh
   )
-  model["entity_encoder"] = entity_encoder
-
+  model = {"entity_encoder": entity_encoder}
   relation_encoder = encoders.EmbeddingLookup(
       config.emb_dim, is_train_ph,
       train_dropout=config.relation_encoder_dropout,

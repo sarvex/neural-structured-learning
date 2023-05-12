@@ -42,10 +42,9 @@ def make_missing_neighbor_inputs(neighbor_config,
   """
   existing_feature_names = set(inputs.keys())
   neighbor_inputs = {}
-  for i in range(neighbor_config.max_neighbors):  # For each potential neighbor.
+  for i in range(neighbor_config.max_neighbors):# For each potential neighbor.
     # Weight of the neighbor.
-    weight_name = '{}{}{}'.format(neighbor_config.prefix, i,
-                                  neighbor_config.weight_suffix)
+    weight_name = f'{neighbor_config.prefix}{i}{neighbor_config.weight_suffix}'
     if weight_name not in existing_feature_names:
       neighbor_inputs[weight_name] = tf.keras.Input((1,),
                                                     dtype=weight_dtype,
@@ -54,8 +53,7 @@ def make_missing_neighbor_inputs(neighbor_config,
     for feature_name, tensor in inputs.items():
       if feature_name.startswith(neighbor_config.prefix):
         continue
-      neighbor_feature_name = '{}{}_{}'.format(neighbor_config.prefix, i,
-                                               feature_name)
+      neighbor_feature_name = f'{neighbor_config.prefix}{i}_{feature_name}'
       if neighbor_feature_name not in existing_feature_names:
         neighbor_inputs[neighbor_feature_name] = tf.keras.Input(
             tensor.shape[1:],
@@ -152,7 +150,7 @@ class NeighborFeatures(tf.keras.layers.Layer):
         self._neighbor_config, filtered_inputs, weight_dtype=self.dtype)
     # Mutate `inputs` for Functional API.
     inputs.update(missing_neighbor_inputs)
-    filtered_inputs.update(missing_neighbor_inputs)
+    filtered_inputs |= missing_neighbor_inputs
     # Only unpack the relevant inputs.
     return super(NeighborFeatures, self).__call__(filtered_inputs, *args,
                                                   **kwargs)

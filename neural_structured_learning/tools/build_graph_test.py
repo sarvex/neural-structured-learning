@@ -158,7 +158,7 @@ class BuildGraphTest(absltest.TestCase):
     for node_id in range(num_points):
       embedding = tf.train.Example()
       embedding.features.feature['id'].bytes_list.value.append(
-          'id_{}'.format(node_id).encode('utf8'))
+          f'id_{node_id}'.encode('utf8'))
       values = embedding.features.feature['embedding'].float_list.value
       values.append(vector.real)
       values.append(vector.imag)
@@ -187,10 +187,8 @@ class BuildGraphTest(absltest.TestCase):
     self.assertEqual(self._num_file_lines(graph_path), num_points * 2 - 8)
     g_actual = graph_utils.read_tsv_graph(graph_path)
 
-    # Check that the graph contains fewer than 2 * N edges
-    actual_edge_cnt = 0
-    for (unused_src_id, tgt_dict) in six.iteritems(g_actual):
-      actual_edge_cnt += len(tgt_dict)
+    actual_edge_cnt = sum(
+        len(tgt_dict) for unused_src_id, tgt_dict in six.iteritems(g_actual))
     self.assertEqual(actual_edge_cnt, 2 * len(embeddings) - 8,
                      'Expected some edges not to have been found.')
 
@@ -220,9 +218,9 @@ class BuildGraphTest(absltest.TestCase):
     # similarity threshold of 0.9).
     g_expected = {}
     for node_id in range(num_points):
-      t_dict = g_expected.setdefault('id_{}'.format(node_id), {})
-      t_dict['id_{}'.format((node_id - 1) % num_points)] = adjacent_similarity
-      t_dict['id_{}'.format((node_id + 1) % num_points)] = adjacent_similarity
+      t_dict = g_expected.setdefault(f'id_{node_id}', {})
+      t_dict[f'id_{(node_id - 1) % num_points}'] = adjacent_similarity
+      t_dict[f'id_{(node_id + 1) % num_points}'] = adjacent_similarity
     self.assertDictEqual(g_actual, g_expected)
 
 

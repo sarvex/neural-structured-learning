@@ -190,12 +190,13 @@ def make_mlp_functional_model(hparams):
       hparams.num_classes, activation='softmax')(
           cur_layer)
 
-  model = tf.keras.Model(inputs, outputs=outputs)
-  return model
+  return tf.keras.Model(inputs, outputs=outputs)
 
 
 def make_mlp_subclass_model(hparams):
   """Creates a multi-layer perceptron subclass model in Keras."""
+
+
 
   class MLP(tf.keras.Model):
     """Subclass model defining a multi-layer perceptron."""
@@ -218,9 +219,8 @@ def make_mlp_subclass_model(hparams):
         cur_layer = dense_layer(cur_layer)
         cur_layer = self.dropout_layer(cur_layer, training=training)
 
-      outputs = self.output_layer(cur_layer)
+      return self.output_layer(cur_layer)
 
-      return outputs
 
   return MLP()
 

@@ -91,8 +91,7 @@ class NCPBase(tf.keras.Model):
     h_x = self.assigned_point_layer(inputs)
     u_x = self.unassigned_point_layer(inputs)
 
-    preprocessed_inputs = [h_x, u_x]
-    return preprocessed_inputs
+    return [h_x, u_x]
 
   def initialize_states(self, preprocessed_inputs):
     """Initializes the global states.
@@ -134,8 +133,7 @@ class NCPBase(tf.keras.Model):
 
     num_clusters = [1] * batch_size
 
-    states = [u_aggr, h_aggr, g_h, g_aggr, g_candidates, num_clusters]
-    return states
+    return [u_aggr, h_aggr, g_h, g_aggr, g_candidates, num_clusters]
 
   def call(self, next_preprocessed_input, states):
     """Computes the logits of adding the new point to all the possible clusters.

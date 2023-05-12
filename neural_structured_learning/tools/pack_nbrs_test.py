@@ -117,10 +117,10 @@ def _num_neighbors_example(num_neighbors):
 def _node_as_neighbor(example, neighbor_id, edge_weight):
   """Returns a `tf.train.Example` containing neighbor features."""
   result = tf.train.Example()
-  nbr_prefix = 'NL_nbr_{}_'.format(neighbor_id)
+  nbr_prefix = f'NL_nbr_{neighbor_id}_'
 
   # Add the edge weight value as a new singleton float feature.
-  weight_feature = nbr_prefix + 'weight'
+  weight_feature = f'{nbr_prefix}weight'
   result.features.feature[weight_feature].float_list.value.append(edge_weight)
 
   # Copy each of the neighbor Example's features, prefixed with 'nbr_prefix'.

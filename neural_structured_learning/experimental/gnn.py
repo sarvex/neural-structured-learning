@@ -34,7 +34,7 @@ def pack_nodes_and_edges(batch_size: int,
                          features: Dict[Text, tf.Tensor], *args):
   """Pack features into a graph."""
   if neighbor_config.max_neighbors == 0:
-    graph = {key: value for key, value in features.items()}
+    graph = dict(features)
     graph['n_node'] = tf.ones(batch_size, dtype=tf.int64)
     graph['n_edge'] = tf.zeros(batch_size, dtype=tf.int64)
     graph['edges'] = tf.zeros([0, 1], dtype=tf.float32)
@@ -52,13 +52,17 @@ def pack_nodes_and_edges(batch_size: int,
   neighbor_features = tf.nest.map_structure(
       lambda x: tf.ragged.boolean_mask(ragged_fn(x), mask), neighbor_features)
   neighbor_weights = tf.ragged.boolean_mask(neighbor_weights, mask)
-  graph = {}
-  for key, value in features.items():
-    graph[key] = tf.concat([
-        neighbor_features[key],
-        tf.RaggedTensor.from_row_splits(
-            value, tf.range(batch_size + 1, dtype=tf.int64)),
-    ], 1)
+  graph = {
+      key: tf.concat(
+          [
+              neighbor_features[key],
+              tf.RaggedTensor.from_row_splits(
+                  value, tf.range(batch_size + 1, dtype=tf.int64)),
+          ],
+          1,
+      )
+      for key, value in features.items()
+  }
   # Just take it from the last feature and assume it's all the same.
   center_node_ids = list(graph.values())[-1].row_limits() - 1
   n_node = list(graph.values())[-1].row_lengths()
@@ -98,9 +102,8 @@ def make_cora_dataset(
           tf.io.FixedLenFeature((), tf.int64, default_value=-1),
   }
   for i in range(neighbor_config.max_neighbors):
-    nbr_feature_key = '{}{}_{}'.format(neighbor_config.prefix, i, 'words')
-    nbr_weight_key = '{}{}{}'.format(neighbor_config.prefix, i,
-                                     neighbor_config.weight_suffix)
+    nbr_feature_key = f'{neighbor_config.prefix}{i}_words'
+    nbr_weight_key = f'{neighbor_config.prefix}{i}{neighbor_config.weight_suffix}'
     features[nbr_feature_key] = tf.io.FixedLenFeature(
         [max_seq_length],
         tf.int64,

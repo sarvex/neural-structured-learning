@@ -109,11 +109,7 @@ def build_model(kbs_address: typing.Text):
         service_address=kbs_address)
 
   # Number of target classes
-  if FLAGS.dataset in ['mnist', 'cifar10']:
-    num_classes = 10
-  else:
-    num_classes = 100
-
+  num_classes = 10 if FLAGS.dataset in ['mnist', 'cifar10'] else 100
   # Builds a simple image model with a normalization layer at the top.
   model = tf.keras.models.Sequential([
       tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),

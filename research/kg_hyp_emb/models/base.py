@@ -150,8 +150,7 @@ class KGModel(tf.keras.Model, abc.ABC):
     else:
       rhs = self.get_rhs(input_tensor)
       rhs_biases = self.bt(input_tensor[:, 2])
-    predictions = self.score(lhs, lhs_biases, rhs, rhs_biases, eval_mode)
-    return predictions
+    return self.score(lhs, lhs_biases, rhs, rhs_biases, eval_mode)
 
   def score(self, lhs, lhs_biases, rhs, rhs_biases, eval_mode):
     """Compute triple scores using embeddings and biases."""
@@ -228,7 +227,5 @@ class KGModel(tf.keras.Model, abc.ABC):
       # compute ranking metrics
       mean_rank[missing] = np.mean(ranks)
       mean_reciprocal_rank[missing] = np.mean(1. / ranks)
-      hits_at[missing] = {}
-      for k in (1, 3, 10):
-        hits_at[missing][k] = np.mean(ranks <= k)
+      hits_at[missing] = {k: np.mean(ranks <= k) for k in (1, 3, 10)}
     return mean_rank, mean_reciprocal_rank, hits_at

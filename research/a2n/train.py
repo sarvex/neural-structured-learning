@@ -427,74 +427,71 @@ def evaluate():
     session.run(iterator.initializer)
     num_attention = 5
     nsteps = 0
-    outf_correct = open(FLAGS.output_dir + "/analyze_correct.txt", "w+")
-    outf_incorrect = open(
-        FLAGS.output_dir + "/analyze_incorrect.txt", "w+"
-    )
-    ncorrect = 0
-    analyze_outputs = [candidate_scores, s, nbrs_s, r, candidates, labels,
-                       attention_probs]
-    if FLAGS.text_kg_file:
-      analyze_outputs.append(text_nbrs_s)
-    while True:
-      try:
-        analyze_vals = session.run(analyze_outputs, {is_train_ph: False})
-        if FLAGS.text_kg_file:
-          cscores, se, nbrs, qr, cands, te, nbr_attention_probs, text_nbrs = \
-            analyze_vals
-        else:
-          cscores, se, nbrs, qr, cands, te, nbr_attention_probs = analyze_vals
-        # import pdb; pdb.set_trace()
-        pred_ids = cscores.argmax(1)
-        for i in range(se.shape[0]):
-          sname = train_graph.inverse_entity_vocab[se[i]]
-          if sname in entity_names:
-            sname = entity_names[sname]
-          rname = train_graph.inverse_relation_vocab[qr[i]]
-          pred_target = cands[i, pred_ids[i]]
-          pred_name = train_graph.inverse_entity_vocab[pred_target]
-          if pred_name in entity_names:
-            pred_name = entity_names[pred_name]
-          tname = train_graph.inverse_entity_vocab[te[i][0]]
-          if tname in entity_names:
-            tname = entity_names[tname]
-          if te[i][0] == pred_target:
-            outf = outf_correct
-            ncorrect += 1
+    with open(f"{FLAGS.output_dir}/analyze_correct.txt", "w+") as outf_correct:
+      outf_incorrect = open(f"{FLAGS.output_dir}/analyze_incorrect.txt", "w+")
+      ncorrect = 0
+      analyze_outputs = [candidate_scores, s, nbrs_s, r, candidates, labels,
+                         attention_probs]
+      if FLAGS.text_kg_file:
+        analyze_outputs.append(text_nbrs_s)
+      while True:
+        try:
+          analyze_vals = session.run(analyze_outputs, {is_train_ph: False})
+          if FLAGS.text_kg_file:
+            cscores, se, nbrs, qr, cands, te, nbr_attention_probs, text_nbrs = \
+              analyze_vals
           else:
-            outf = outf_incorrect
-          outf.write("\n(%d) %s, %s, ? \t Pred: %s \t Target: %s" %
-                     (nsteps+i+1, sname, rname, pred_name, tname))
-          top_nbrs_index = np.argsort(nbr_attention_probs[i, :])[::-1]
-          outf.write("\nTop Nbrs:")
-          for j in range(num_attention):
-            nbr_index = top_nbrs_index[j]
-            if nbr_index < FLAGS.max_neighbors:
-              nbr_id = nbrs[i, nbr_index, :]
-              nbr_name = ""
-              for k in range(0, nbrs.shape[-1], 2):
-                ent_name = train_graph.inverse_entity_vocab[nbr_id[k+1]]
+            cscores, se, nbrs, qr, cands, te, nbr_attention_probs = analyze_vals
+          # import pdb; pdb.set_trace()
+          pred_ids = cscores.argmax(1)
+          for i in range(se.shape[0]):
+            sname = train_graph.inverse_entity_vocab[se[i]]
+            if sname in entity_names:
+              sname = entity_names[sname]
+            rname = train_graph.inverse_relation_vocab[qr[i]]
+            pred_target = cands[i, pred_ids[i]]
+            pred_name = train_graph.inverse_entity_vocab[pred_target]
+            if pred_name in entity_names:
+              pred_name = entity_names[pred_name]
+            tname = train_graph.inverse_entity_vocab[te[i][0]]
+            if tname in entity_names:
+              tname = entity_names[tname]
+            if te[i][0] == pred_target:
+              outf = outf_correct
+              ncorrect += 1
+            else:
+              outf = outf_incorrect
+            outf.write("\n(%d) %s, %s, ? \t Pred: %s \t Target: %s" %
+                       (nsteps+i+1, sname, rname, pred_name, tname))
+            top_nbrs_index = np.argsort(nbr_attention_probs[i, :])[::-1]
+            outf.write("\nTop Nbrs:")
+            for j in range(num_attention):
+              nbr_index = top_nbrs_index[j]
+              if nbr_index < FLAGS.max_neighbors:
+                nbr_id = nbrs[i, nbr_index, :]
+                nbr_name = ""
+                for k in range(0, nbrs.shape[-1], 2):
+                  ent_name = train_graph.inverse_entity_vocab[nbr_id[k+1]]
+                  if ent_name in entity_names:
+                    ent_name = entity_names[ent_name]
+                  rel_name = train_graph.inverse_relation_vocab[nbr_id[k]]
+                  nbr_name += f"({rel_name}, {ent_name})"
+              else:
+                # Text Relation
+                text_nbr_ids = text_nbrs[i, nbr_index - FLAGS.max_neighbors, :]
+                text_nbr_ent = text_nbr_ids[0]
+                ent_name = train_graph.inverse_entity_vocab[text_nbr_ent]
                 if ent_name in entity_names:
                   ent_name = entity_names[ent_name]
-                rel_name = train_graph.inverse_relation_vocab[nbr_id[k]]
-                nbr_name += "(%s, %s)" % (rel_name, ent_name)
-            else:
-              # Text Relation
-              text_nbr_ids = text_nbrs[i, nbr_index - FLAGS.max_neighbors, :]
-              text_nbr_ent = text_nbr_ids[0]
-              ent_name = train_graph.inverse_entity_vocab[text_nbr_ent]
-              if ent_name in entity_names:
-                ent_name = entity_names[ent_name]
-              rel_name = train_graph.get_relation_text(text_nbr_ids[1:])
-              nbr_name = "(%s, %s)" % (rel_name, ent_name)
-            outf.write("\n\t\t %s Prob: %.4f" %
-                       (nbr_name, nbr_attention_probs[i, nbr_index]))
-        nsteps += se.shape[0]
-        tf.logging.info("Current hits@1: %.3f", ncorrect * 1.0 / (nsteps))
+                rel_name = train_graph.get_relation_text(text_nbr_ids[1:])
+                nbr_name = f"({rel_name}, {ent_name})"
+              outf.write("\n\t\t %s Prob: %.4f" %
+                         (nbr_name, nbr_attention_probs[i, nbr_index]))
+          nsteps += se.shape[0]
+          tf.logging.info("Current hits@1: %.3f", ncorrect * 1.0 / (nsteps))
 
-      except tf.errors.OutOfRangeError:
-        break
-    outf_correct.close()
+        except tf.errors.OutOfRangeError:
+          break
     outf_incorrect.close()
     return
 
@@ -568,7 +565,7 @@ def train():
       text_kg_file=FLAGS.text_kg_file
   )
 
-  worker_device = "/job:{}".format(FLAGS.brain_job_name)
+  worker_device = f"/job:{FLAGS.brain_job_name}"
   with tf.device(
       tf.train.replica_device_setter(
           FLAGS.ps_tasks, worker_device=worker_device)):

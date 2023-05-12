@@ -175,8 +175,7 @@ class Dataset(object):
   def get_features(self, indices):
     """Returns the features of the samples with the provided indices."""
     f = self.features[indices]
-    f = self.feature_preproc_fn(f)
-    return f
+    return self.feature_preproc_fn(f)
 
   def get_labels(self, indices):
     return self.labels[indices]
@@ -245,8 +244,7 @@ class Dataset(object):
 
   @staticmethod
   def load_from_pickle(file_path):
-    dataset = pickle.load(open(file_path, 'r'))
-    return dataset
+    return pickle.load(open(file_path, 'r'))
 
 
 class GraphDataset(Dataset):
@@ -695,8 +693,7 @@ class CotrainDataset(object):
     labels = self.get_labels(indices)
     labels_orig = self.get_original_labels(indices)
     correct_labels = np.sum(labels == labels_orig)
-    ratio_correct = float(correct_labels) / indices.shape[0]
-    return ratio_correct
+    return float(correct_labels) / indices.shape[0]
 
   def compute_dataset_statistics(self, selected_samples, summary_writer, step):
     """Computes statistics about the correctness of the labels of a Dataset."""

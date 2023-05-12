@@ -113,23 +113,26 @@ class SparseFeatureEmbedding(tf.keras.layers.Layer):
     for name, (embed_dim, sigma_dim) in self._feature_map.items():
       if sigma_dim > 0:
         vc_vec = self.add_weight(
-            name="%s/context_free_vector" % name,
+            name=f"{name}/context_free_vector",
             shape=[embed_dim],
             dtype=tf.float32,
             trainable=True,
-            initializer=tf.keras.initializers.RandomNormal)
+            initializer=tf.keras.initializers.RandomNormal,
+        )
         sigma_kernel = self.add_weight(
-            name="%s/sigma_kernel" % name,
+            name=f"{name}/sigma_kernel",
             shape=[sigma_dim],
             dtype=tf.float32,
             trainable=True,
-            initializer=tf.keras.initializers.RandomNormal)
+            initializer=tf.keras.initializers.RandomNormal,
+        )
         sigma_bias = self.add_weight(
-            name="%s/sigma_bias" % name,
+            name=f"{name}/sigma_bias",
             shape=[1],
             dtype=tf.float32,
             trainable=True,
-            initializer=tf.keras.initializers.zeros)
+            initializer=tf.keras.initializers.zeros,
+        )
         self._variable_map[name] = BagOfSparseFeatureVariables(
             vc_vec, sigma_kernel, sigma_bias)
 
@@ -172,7 +175,7 @@ class SparseFeatureEmbedding(tf.keras.layers.Layer):
     input_embedding_map = {}
     for name, keys in feature_keys.items():
       if name not in self._feature_map:
-        raise RuntimeError("input feature %s is not in feature map." % name)
+        raise RuntimeError(f"input feature {name} is not in feature map.")
       embed_dim, sigma_dim = self._feature_map[name]
       input_variables = None
       if name in self._variable_map.keys():
@@ -182,11 +185,12 @@ class SparseFeatureEmbedding(tf.keras.layers.Layer):
           self._de_config,
           embed_dim,
           sigma_dim,
-          "%s_%s" % (self._op_name, name),
+          f"{self._op_name}_{name}",
           self._em_steps,
           input_variables,
           service_address=self._service_address,
-          timeout_ms=self._timeout_ms)
+          timeout_ms=self._timeout_ms,
+      )
       if not input_variables:
         self._variable_map[name] = variables
       embedding_list.append(embed)
@@ -349,19 +353,16 @@ def embed_single_feature(keys: tf.Tensor,
         timeout_ms=timeout_ms)
     return embedding, None, None, embedding, None
 
-  # Define context vector and sigma function parameters.
   if sigma_dim > 0:
     if variables:
       vc = variables.context_free_vector
       sigma_kernel = variables.sigma_kernel
       sigma_bias = variables.sigma_bias
     else:
-      vc = tf.Variable(
-          tf.random.normal([embedding_dim]), name="%s_vc" % feature_name)
-      sigma_kernel = tf.Variable(
-          tf.random.normal([sigma_dim]),
-          name="%s_sigma_kernal" % feature_name)
-      sigma_bias = tf.Variable([0.0], name="%s_sigma_bias" % feature_name)
+      vc = tf.Variable(tf.random.normal([embedding_dim]), name=f"{feature_name}_vc")
+      sigma_kernel = tf.Variable(tf.random.normal([sigma_dim]),
+                                 name=f"{feature_name}_sigma_kernal")
+      sigma_bias = tf.Variable([0.0], name=f"{feature_name}_sigma_bias")
 
   input_embedding, sigma_emb = _partitioned_dynamic_embedding_lookup(
       keys,

@@ -62,8 +62,8 @@ def normalize(tensor, norm_type, epsilon=1e-6):
     normalized_tensor = tf.nn.l2_normalize(
         tensor, axis=target_axes, epsilon=epsilon**2)
   else:
-    raise NotImplementedError('Unrecognized or unimplemented "norm_type": %s' %
-                              norm_type)
+    raise NotImplementedError(
+        f'Unrecognized or unimplemented "norm_type": {norm_type}')
   return normalized_tensor
 
 
@@ -168,7 +168,7 @@ def random_in_norm_ball(tensor_structure, radius, norm_type):
     raise ValueError('random_in_norm_ball() only supports floating tensors.')
   # Reject unless the set of first dimensions is {N}, {None}, or {N, None} for
   # some number N.
-  if len(set(t.shape.as_list()[0] for t in tensors) - set([None])) > 1:
+  if len({t.shape.as_list()[0] for t in tensors} - {None}) > 1:
     raise ValueError('The first dimension of all tensors should be the same.')
   if isinstance(norm_type, six.string_types):  # Convert string to NormType.
     norm_type = configs.NormType(norm_type)
@@ -191,12 +191,10 @@ def random_in_norm_ball(tensor_structure, radius, norm_type):
         tensor_structure,
         [t * _expand_to_rank(scale, t.shape.rank) for t in samples])
   elif norm_type == configs.NormType.L1:
-    # Sample each coordinate w/ Laplace(0, 1) ~ Exponential(1) - Exponential(1)
-    samples = []
-    for t in tensors:
-      samples.append(
-          tf.random.gamma(t.shape, 1., 1., t.dtype) -
-          tf.random.gamma(t.shape, 1., 1., t.dtype))
+    samples = [
+        tf.random.gamma(t.shape, 1.0, 1.0, t.dtype) -
+        tf.random.gamma(t.shape, 1.0, 1.0, t.dtype) for t in tensors
+    ]
     l1_norm = _reduce_across_tensors(tf.reduce_sum,
                                      [tf.abs(t) for t in samples])
     # L1 norm of one extra coordinate: |Laplace(0, 1)| ~ Exponential(1).
@@ -279,8 +277,8 @@ def maximize_within_unit_norm(weights, norm_type, epsilon=1e-6):
     ]
     return tf.nest.pack_sequence_as(weights, mask)
 
-  raise NotImplementedError('Unrecognized or unimplemented "norm_type": %s' %
-                            norm_type)
+  raise NotImplementedError(
+      f'Unrecognized or unimplemented "norm_type": {norm_type}')
 
 
 def get_target_indices(logits, labels, adv_target_config):
@@ -389,7 +387,7 @@ def replicate_embeddings(embeddings, replicate_times):
       the `int32` type.
   """
   with tf.control_dependencies(
-      [tf.debugging.assert_greater_equal(replicate_times, 0)]):
+        [tf.debugging.assert_greater_equal(replicate_times, 0)]):
     replicate_times = tf.cast(replicate_times, tf.dtypes.int32)
     batch_size = tf.shape(input=embeddings)[0]
     idx_array = tf.range(batch_size, dtype='int32')
@@ -398,8 +396,7 @@ def replicate_embeddings(embeddings, replicate_times):
       lookup_idx = tf.reshape(lookup_idx, [batch_size * replicate_times])
     else:
       lookup_idx = _replicate_index(idx_array, replicate_times)
-    output_embeddings = tf.gather(embeddings, lookup_idx)
-    return output_embeddings
+    return tf.gather(embeddings, lookup_idx)
 
 
 def _select_decay_fn(key):
@@ -410,7 +407,7 @@ def _select_decay_fn(key):
   elif key == configs.DecayType.NATURAL_EXP_DECAY:
     return tf.compat.v1.train.natural_exp_decay
   else:
-    raise ValueError('Invalid configs.DecayType %s.' % key)
+    raise ValueError(f'Invalid configs.DecayType {key}.')
 
 
 def decay_over_time(global_step, decay_config, init_value=1.0):
@@ -646,8 +643,8 @@ def unpack_neighbor_features(features, neighbor_config, keep_rank=True):
 
   # Iterate through the 'features' dictionary to populate sample_features,
   # neighbor_features, and neighbor_weights in one pass.
-  sample_features = dict()
-  neighbor_features = dict()
+  sample_features = {}
+  neighbor_features = {}
   for feature_name, feature_value in features.items():
     # Every value in 'features' is expected to have rank > 1, i.e, 'features'
     # should have been batched to include the extra batch dimension.

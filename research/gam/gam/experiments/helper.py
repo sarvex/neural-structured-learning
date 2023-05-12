@@ -51,7 +51,7 @@ def get_model_cls(model_name,
     elif dataset_name in ('cifar10', 'cifar100', 'svhn_cropped', 'svhn'):
       channels = 3
     else:
-      raise ValueError('Dataset name `%s` unsupported.' % dataset_name)
+      raise ValueError(f'Dataset name `{dataset_name}` unsupported.')
     return ImageCNNAgreement(
         output_dim=data.num_classes,
         channels=channels,
@@ -111,7 +111,7 @@ def get_model_agr(model_name,
     elif dataset_name in ('cifar10', 'cifar100', 'svhn_cropped', 'svhn'):
       channels = 3
     else:
-      raise ValueError('Dataset name `%s` unsupported.' % dataset_name)
+      raise ValueError(f'Dataset name `{dataset_name}` unsupported.')
     return ImageCNNAgreement(
         output_dim=1,
         channels=channels,

@@ -47,14 +47,13 @@ def run_dncnn(x: tf.Tensor, image_chnls: int = 3, depth: int = 17,
   for _ in range(depth - 2):
     x = conv_block(x, channels=n_channels, bn=True)
 
-  outputs = layers.Conv2D(
-    image_chnls,
-    kernel_size=3,
-    padding="same",
-    use_bias=False,
-    kernel_initializer="orthogonal"
+  return layers.Conv2D(
+      image_chnls,
+      kernel_size=3,
+      padding="same",
+      use_bias=False,
+      kernel_initializer="orthogonal",
   )(x)
-  return outputs
 
 
 def get_dncnn(image_size: int = 32, image_chnls: int = 3,

@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for nsl.estimator.adversarial_regularization."""
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -31,7 +32,7 @@ from tensorflow.python.framework import test_util  # pylint: disable=g-direct-te
 
 
 FEATURE_NAME = 'x'
-WEIGHT_VARIABLE = 'linear/linear_model/' + FEATURE_NAME + '/weights'
+WEIGHT_VARIABLE = f'linear/linear_model/{FEATURE_NAME}/weights'
 BIAS_VARIABLE = 'linear/linear_model/bias_weights'
 
 

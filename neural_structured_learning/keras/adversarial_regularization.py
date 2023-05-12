@@ -146,8 +146,7 @@ def adversarial_loss(features,
   adv_output = model(adv_input)
   if sample_weights is not None:
     adv_sample_weights = tf.math.multiply(sample_weights, adv_sample_weights)
-  adv_loss = loss_fn(labels, adv_output, adv_sample_weights)
-  return adv_loss
+  return loss_fn(labels, adv_output, adv_sample_weights)
 
 
 class _LossWrapper(tf.keras.losses.Loss):
@@ -237,8 +236,7 @@ def _prepare_loss_fns(loss, output_names):
   if isinstance(loss, collections.Mapping):
     for name in output_names:
       if name not in loss:
-        raise ValueError(
-            'Loss for {} not found in `loss` dictionary.'.format(name))
+        raise ValueError(f'Loss for {name} not found in `loss` dictionary.')
     return [tf.keras.losses.get(loss[name]) for name in output_names]
 
   # loss for single output, or shared loss fn for multiple outputs
@@ -270,12 +268,12 @@ def _prepare_loss_weights(loss_weights, output_names):
   if isinstance(loss_weights, collections.Mapping):
     for name in output_names:
       if name not in loss_weights:
-        raise ValueError('Loss weight for {} not found in `loss_weights` '
-                         'dictionary.'.format(name))
+        raise ValueError(
+            f'Loss weight for {name} not found in `loss_weights` dictionary.')
     return [float(loss_weights[name]) for name in output_names]
 
-  raise TypeError('`loss_weights` must be a list or a dict, '
-                  'got {}'.format(str(loss_weights)))
+  raise TypeError(
+      f'`loss_weights` must be a list or a dict, got {str(loss_weights)}')
 
 
 def _clone_metrics(metrics):
@@ -326,8 +324,7 @@ def _prepare_metric_fns(metrics, output_names, loss_wrappers):
     return [[] for _ in output_names]
 
   if not isinstance(metrics, (list, collections.Mapping)):
-    raise TypeError('`metrics` must be a list or a dict, got {}'.format(
-        str(metrics)))
+    raise TypeError(f'`metrics` must be a list or a dict, got {str(metrics)}')
 
   to_list = lambda x: x if isinstance(x, list) else [x]
 
@@ -347,13 +344,10 @@ def _prepare_metric_fns(metrics, output_names, loss_wrappers):
     raise ValueError('The number of sub-lists in `metrics` should be the '
                      'same as model output.')
 
-  metric_fns = []
-  for per_output_metrics, loss_wrapper in zip(metrics, loss_wrappers):
-    metric_fns.append([
-        tf.keras.metrics.get(loss_wrapper.resolve_metric(metric))
-        for metric in to_list(per_output_metrics)
-    ])
-  return metric_fns
+  return [[
+      tf.keras.metrics.get(loss_wrapper.resolve_metric(metric))
+      for metric in to_list(per_output_metrics)
+  ] for per_output_metrics, loss_wrapper in zip(metrics, loss_wrappers)]
 
 
 def _compute_loss_and_metrics(losses,
@@ -536,13 +530,13 @@ class AdversarialRegularization(tf.keras.Model):
     if len(self.label_keys) > 1:
       # If there are more than one output, disambigaute losses by corresponding
       # label name.
-      base_name += '_' + label
+      base_name += f'_{label}'
     if base_name not in self._metric_name_count:
       self._metric_name_count[base_name] = 1
       return base_name
     else:
       self._metric_name_count[base_name] += 1
-      return '{}_{}'.format(base_name, self._metric_name_count[base_name])
+      return f'{base_name}_{self._metric_name_count[base_name]}'
 
   def _build_loss_and_metric_fns(self, output_names):
     self._metric_name_count = collections.Counter()
@@ -555,9 +549,9 @@ class AdversarialRegularization(tf.keras.Model):
       return  # Losses are already populated.
 
     if len(output_names) != len(self.label_keys):
-      raise ValueError('The model has different number of outputs and labels. '
-                       '({} vs. {})'.format(
-                           len(output_names), len(self.label_keys)))
+      raise ValueError(
+          f'The model has different number of outputs and labels. ({len(output_names)} vs. {len(self.label_keys)})'
+      )
 
     loss_fns = _prepare_loss_fns(self._compile_arg_loss, output_names)
     loss_weights = _prepare_loss_weights(self._compile_arg_loss_weights,

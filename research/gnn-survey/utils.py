@@ -90,10 +90,8 @@ def encode_onehot(dataset, labels):
   # Convert to onehot label
   num_classes = len(label_index[dataset])
   onehot_labels = np.zeros((len(labels), num_classes))
-  idx = 0
-  for s in labels:
+  for idx, s in enumerate(labels):
     onehot_labels[idx, label_index[dataset][s]] = 1
-    idx += 1
   return onehot_labels
 
 
@@ -127,8 +125,8 @@ def sparse_matrix_to_tf_sparse_tensor(matrix):
 def load_dataset(dataset, sparse_features, normalize_adj):
   """Loads dataset."""
   dir_path = os.path.join('data', dataset)
-  content_path = os.path.join(dir_path, '{}.content'.format(dataset))
-  citation_path = os.path.join(dir_path, '{}.cites'.format(dataset))
+  content_path = os.path.join(dir_path, f'{dataset}.content')
+  citation_path = os.path.join(dir_path, f'{dataset}.cites')
 
   content = np.genfromtxt(content_path, dtype=np.dtype(str))
   idx = np.array(content[:, 0])
@@ -142,11 +140,7 @@ def load_dataset(dataset, sparse_features, normalize_adj):
       list(map(idx_map.get, edges_unordered.flatten())),
       dtype=np.dtype(str)).reshape(edges_unordered.shape)
 
-  # Delete relation which the nodes appear in cites but not in content
-  del_rel = []
-  for i, j in enumerate(edges):
-    if j[0] == 'None' or j[1] == 'None':
-      del_rel.append(i)
+  del_rel = [i for i, j in enumerate(edges) if j[0] == 'None' or j[1] == 'None']
   edges = np.delete(edges, del_rel, 0)
 
   adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),

@@ -90,7 +90,7 @@ class AdversarialRegularizationMultiDeviceTest(tf.test.TestCase):
 
   def _get_mirrored_strategy(self):
     device_type = 'GPU' if tf.test.is_gpu_available() else 'CPU'
-    devices = ['{}:{}'.format(device_type, i) for i in range(NUM_REPLICAS)]
+    devices = [f'{device_type}:{i}' for i in range(NUM_REPLICAS)]
     return tf.distribute.MirroredStrategy(devices)
 
   def test_train_with_distribution_strategy(self):

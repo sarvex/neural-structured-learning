@@ -180,7 +180,7 @@ def compute_sampled_logits(positive_keys,
     TypeError: If de_config is an instance of DynamicEmbeddingConfig.
   """
   if not var_name:
-    raise ValueError("Must specify a valid name, got %s" % var_name)
+    raise ValueError(f"Must specify a valid name, got {var_name}")
   if num_samples < 1:
     raise ValueError("Invalid num_samples: %d" % num_samples)
 

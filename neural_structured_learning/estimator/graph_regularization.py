@@ -93,7 +93,7 @@ def add_graph_regularization(estimator,
     # then it is possible for base_model_fn not to accept these arguments.
     # See documentation for tf.estimator.Estimator for additional context.
     kwargs = {'mode': mode}
-    embedding_fn_kwargs = dict()
+    embedding_fn_kwargs = {}
     if 'params' in base_model_fn_args:
       kwargs['params'] = params
       embedding_fn_kwargs['params'] = params
@@ -103,10 +103,10 @@ def add_graph_regularization(estimator,
     # Uses the same variable scope for calculating the original objective and
     # the graph regularization loss term.
     with tf.compat.v1.variable_scope(
-        tf.compat.v1.get_variable_scope(),
-        reuse=tf.compat.v1.AUTO_REUSE,
-        auxiliary_name_scope=False):
-      nbr_features = dict()
+            tf.compat.v1.get_variable_scope(),
+            reuse=tf.compat.v1.AUTO_REUSE,
+            auxiliary_name_scope=False):
+      nbr_features = {}
       nbr_weights = None
       if mode == tf.estimator.ModeKeys.TRAIN:
         # Extract sample features, neighbor features, and neighbor weights if we

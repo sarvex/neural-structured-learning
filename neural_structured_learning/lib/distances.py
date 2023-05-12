@@ -187,7 +187,7 @@ def _apply_transform(batched_tensor, transform_type, axis=None):
   if transform_type == configs.TransformType.SOFTMAX:
     return tf.nn.softmax(batched_tensor, axis=axis)
   else:
-    raise ValueError('Invalid TransformType %s.' % transform_type)
+    raise ValueError(f'Invalid TransformType {transform_type}.')
 
 
 def _select_distance_fn(key):
@@ -203,7 +203,7 @@ def _select_distance_fn(key):
   elif key == configs.DistanceType.KL_DIVERGENCE:
     return kl_divergence
   else:
-    raise ValueError('Invalid configs.DistanceType %s.' % key)
+    raise ValueError(f'Invalid configs.DistanceType {key}.')
 
 
 def _is_axis_required_in_distance_fn(key):

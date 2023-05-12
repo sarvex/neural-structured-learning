@@ -60,15 +60,15 @@ def make_feature_spec(input_shape, max_neighbors, include_id_features=False):
                                                           tf.string,
                                                           default_value='')
   for i in range(max_neighbors):
-    nbr_feature_key = '{}{}_{}'.format(NBR_FEATURE_PREFIX, i, FEATURE_NAME)
-    nbr_weight_key = '{}{}{}'.format(NBR_FEATURE_PREFIX, i, NBR_WEIGHT_SUFFIX)
+    nbr_feature_key = f'{NBR_FEATURE_PREFIX}{i}_{FEATURE_NAME}'
+    nbr_weight_key = f'{NBR_FEATURE_PREFIX}{i}{NBR_WEIGHT_SUFFIX}'
     feature_spec[nbr_feature_key] = tf.io.FixedLenFeature(
         input_shape, tf.float32)
     feature_spec[nbr_weight_key] = tf.io.FixedLenFeature(
         [1], tf.float32, default_value=tf.constant([0.0]))
 
     if include_id_features:
-      nbr_id_key = '{}{}_{}'.format(NBR_FEATURE_PREFIX, i, ID_FEATURE_NAME)
+      nbr_id_key = f'{NBR_FEATURE_PREFIX}{i}_{ID_FEATURE_NAME}'
       feature_spec[nbr_id_key] = tf.io.FixedLenFeature((),
                                                        tf.string,
                                                        default_value='')

@@ -32,9 +32,9 @@ def batch_iterator(inputs,
   if isinstance(inputs, set):
     inputs = np.asarray(list(inputs))
   if not isinstance(inputs, (np.ndarray, list)):
-    raise TypeError('Unsupported data type %s encountered.' % type(inputs))
+    raise TypeError(f'Unsupported data type {type(inputs)} encountered.')
   if targets is not None and not isinstance(targets, (np.ndarray, list)):
-    raise TypeError('Unsupported data type %s encountered.' % type(targets))
+    raise TypeError(f'Unsupported data type {type(targets)} encountered.')
   num_samples = len(inputs)
   if batch_size is None:
     batch_size = num_samples
@@ -120,11 +120,7 @@ class Trainer(object):
 
     # Make sure that irrespective of the stop criteria, the minimum required
     # number of iterations is achieved.
-    if step < min_num_iter:
-      has_converged = False
-    else:
-      has_converged = True
-
+    has_converged = step >= min_num_iter
     # Make sure we don't exceed the max allowed number of iterations.
     if max_iter is not None and step >= max_iter:
       print('Maximum number of iterations reached.')

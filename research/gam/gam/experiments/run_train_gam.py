@@ -285,7 +285,7 @@ def load_data():
   elif FLAGS.data_source == 'planetoid':
     return load_data_planetoid(
         FLAGS.dataset_name, FLAGS.preprocessed_data_dir, row_normalize=False)
-  raise ValueError('Unsupported dataset source name: %s' % FLAGS.data_source)
+  raise ValueError(f'Unsupported dataset source name: {FLAGS.data_source}')
 
 
 def main(argv):
@@ -326,11 +326,11 @@ def main(argv):
   ############################################################################
   # Put together parameters to create a model name.
   model_name = FLAGS.model_cls
-  model_name += ('_' + FLAGS.hidden_cls) if FLAGS.model_cls == 'mlp' else ''
-  model_name += '-' + FLAGS.model_agr
-  model_name += ('_' + FLAGS.hidden_agr) if FLAGS.model_agr == 'mlp' else ''
-  model_name += '-aggr_' + FLAGS.aggregation_agr_inputs
-  model_name += ('_' + FLAGS.hidden_aggreg) if FLAGS.hidden_aggreg else ''
+  model_name += f'_{FLAGS.hidden_cls}' if FLAGS.model_cls == 'mlp' else ''
+  model_name += f'-{FLAGS.model_agr}'
+  model_name += f'_{FLAGS.hidden_agr}' if FLAGS.model_agr == 'mlp' else ''
+  model_name += f'-aggr_{FLAGS.aggregation_agr_inputs}'
+  model_name += f'_{FLAGS.hidden_aggreg}' if FLAGS.hidden_aggreg else ''
   model_name += (
       '-add_%d-conf_%.2f-iterCls_%d-iterAgr_%d-batchCls_%d' %
       (FLAGS.num_samples_to_label, FLAGS.min_confidence_new_label,
@@ -347,7 +347,7 @@ def main(argv):
   model_name += '-PenNegAgr' if FLAGS.penalize_neg_agr else ''
   model_name += '-transd' if not FLAGS.inductive else ''
   model_name += '-L2' if FLAGS.use_l2_cls else '-CE'
-  model_name += '-seed_' + str(FLAGS.seed)
+  model_name += f'-seed_{str(FLAGS.seed)}'
   model_name += FLAGS.experiment_suffix
   logging.info('Model name: %s', model_name)
 

@@ -148,5 +148,4 @@ class NCPWrapper(tf.keras.Model):
       A scalar `Tensor`. The NLL loss.
     """
     batch_avg_logits = tf.reduce_mean(logits, axis=0)
-    nll_loss = -tf.reduce_sum(batch_avg_logits)
-    return nll_loss
+    return -tf.reduce_sum(batch_avg_logits)

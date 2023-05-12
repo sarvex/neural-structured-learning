@@ -131,7 +131,7 @@ class _GenAdvNeighbor(abs_gen.GenNeighbor):
     # (2) The feature is not involved in loss computation.
     if invalid_grads:
       if self._raise_invalid_gradient:
-        raise ValueError('Cannot perturb features ' + str(invalid_grads.keys()))
+        raise ValueError(f'Cannot perturb features {str(invalid_grads.keys())}')
       logging.log_first_n(logging.WARNING, 'Cannot perturb features %s', 1,
                           invalid_grads.keys())
 
@@ -198,13 +198,11 @@ class _GenAdvNeighbor(abs_gen.GenNeighbor):
     }
     perturb_directions = utils.maximize_within_unit_norm(
         masked_grads, self._adv_config.adv_grad_norm)
-    # Clip perturbations into epsilon ball here. Note that this ball is
-    # centered around the original input point.
-    perturbations = {}
-    for key, direction in perturb_directions.items():
-      perturbations[key] = (
-          direction * self._adv_config.adv_step_size + dense_features[key]
-          - dense_original_features[key])
+    perturbations = {
+        key: (direction * self._adv_config.adv_step_size + dense_features[key] -
+              dense_original_features[key])
+        for key, direction in perturb_directions.items()
+    }
     if self._adv_config.pgd_epsilon is not None:
       perturbations = utils.project_to_ball(perturbations,
                                             self._adv_config.pgd_epsilon,
@@ -227,16 +225,14 @@ class _GenAdvNeighbor(abs_gen.GenNeighbor):
       A dictionary of tensors with the same structure as `dense_features`
       representing the perturbed features.
     """    # Apply feature constraints specified in the config.
-    perturbed_features = {}
-    for key, feature in dense_features.items():
-      if key not in perturbations:  # No perturbation due to no gradient
-        perturbed_features[key] = feature
-      else:
-        perturbed_features[key] = _apply_feature_constraints(
+    return {
+        key: feature if key not in perturbations else _apply_feature_constraints(
             feature + tf.stop_gradient(perturbations[key]),
             self.feature_min.get(key, None),
-            self.feature_max.get(key, None))
-    return perturbed_features
+            self.feature_max.get(key, None),
+        )
+        for key, feature in dense_features.items()
+    }
 
   def gen_neighbor(self, input_features, pgd_labels=None):
     """Generates adversarial neighbors and the corresponding weights.
@@ -281,7 +277,7 @@ class _GenAdvNeighbor(abs_gen.GenNeighbor):
     if sparse_original_features:
       sparse_keys = str(sparse_original_features.keys())
       if self._raise_invalid_gradient:
-        raise ValueError('Cannot perturb non-Tensor input: ' + sparse_keys)
+        raise ValueError(f'Cannot perturb non-Tensor input: {sparse_keys}')
       logging.log_first_n(logging.WARNING,
                           'Cannot perturb non-Tensor input: %s', 1, sparse_keys)
 

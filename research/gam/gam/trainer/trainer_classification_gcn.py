@@ -377,7 +377,7 @@ class TrainerClassificationGCN(Trainer):
     if isinstance(weight_decay_var, tf.Variable):
       self.vars_to_save.append(weight_decay_var)
     if self.warm_start:
-      self.vars_to_save.extend([v for v in self.variables])
+      self.vars_to_save.extend(list(self.variables))
 
     # More variables to be initialized after the session is created.
     self.is_initialized = False
@@ -596,35 +596,35 @@ class TrainerClassificationGCN(Trainer):
       }
       if unlabeled_indices is not None:
         # This is not None only when using VAT regularization.
-        feed_dict.update({self.input_indices_unlabeled: unlabeled_indices})
+        feed_dict[self.input_indices_unlabeled] = unlabeled_indices
       if pair_ll_iterator is not None:
         _, indices_tgt, _, features_tgt, labels_src, labels_tgt = next(
             pair_ll_iterator)
-        feed_dict.update({
+        feed_dict |= {
             self.features_ll_right: features_tgt,
             self.indices_ll_right: indices_tgt,
             self.labels_ll_left: labels_src,
-            self.labels_ll_right: labels_tgt
-        })
+            self.labels_ll_right: labels_tgt,
+        }
       if pair_lu_iterator is not None:
         indices_src, indices_tgt, features_src, features_tgt, labels_src, _ = (
             next(pair_lu_iterator))
-        feed_dict.update({
+        feed_dict |= {
             self.indices_lu_left: indices_src,
             self.indices_lu_right: indices_tgt,
             self.features_lu_left: features_src,
             self.features_lu_right: features_tgt,
-            self.labels_lu_left: labels_src
-        })
+            self.labels_lu_left: labels_src,
+        }
       if pair_uu_iterator is not None:
         indices_src, indices_tgt, features_src, features_tgt, _, _ = next(
             pair_uu_iterator)
-        feed_dict.update({
+        feed_dict |= {
             self.indices_uu_left: indices_src,
             self.indices_uu_right: indices_tgt,
             self.features_uu_left: features_src,
-            self.features_uu_right: features_tgt
-        })
+            self.features_uu_right: features_tgt,
+        }
       return feed_dict
     except StopIteration:
       # If the iterator has finished, return None.
@@ -734,8 +734,7 @@ class TrainerClassificationGCN(Trainer):
 
     if self.enable_summaries:
       summary = tf.Summary()
-      summary.value.add(
-          tag='ClassificationModel/' + split + '_acc', simple_value=val_acc)
+      summary.value.add(tag=f'ClassificationModel/{split}_acc', simple_value=val_acc)
       iter_cls_total = session.run(self.iter_cls_total)
       summary_writer.add_summary(summary, iter_cls_total)
       summary_writer.flush()
@@ -880,6 +879,4 @@ class TrainerClassificationGCN(Trainer):
         self.features_op: self.features,
         self.support_op: self.support
     }
-    predictions = session.run(
-        self.normalized_predictions_batch, feed_dict=feed_dict)
-    return predictions
+    return session.run(self.normalized_predictions_batch, feed_dict=feed_dict)

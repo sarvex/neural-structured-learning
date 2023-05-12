@@ -88,12 +88,8 @@ def get_filters(examples, n_relations):
   for lhs, rel, rhs in examples:
     rhs_filters[(lhs, rel)].add(rhs)
     lhs_filters[(rhs, rel + n_relations)].add(lhs)
-  lhs_final = {}
-  rhs_final = {}
-  for k, v in lhs_filters.items():
-    lhs_final[k] = sorted(list(v))
-  for k, v in rhs_filters.items():
-    rhs_final[k] = sorted(list(v))
+  lhs_final = {k: sorted(list(v)) for k, v in lhs_filters.items()}
+  rhs_final = {k: sorted(list(v)) for k, v in rhs_filters.items()}
   return lhs_final, rhs_final
 
 
@@ -125,7 +121,7 @@ if __name__ == '__main__':
     dataset_path = os.path.join('data/', dataset_name)
     dataset_examples, dataset_filters = process_dataset(dataset_path)
     for dataset_split in ['train', 'valid', 'test']:
-      save_path = os.path.join(dataset_path, dataset_split + '.pickle')
+      save_path = os.path.join(dataset_path, f'{dataset_split}.pickle')
       with open(save_path, 'wb') as save_file:
         pickle.dump(dataset_examples[dataset_split], save_file)
     with open(os.path.join(dataset_path, 'to_skip.pickle'), 'wb') as save_file:

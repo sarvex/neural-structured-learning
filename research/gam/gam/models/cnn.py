@@ -236,7 +236,7 @@ class ImageCNNAgreement(Model):
         parameters which will be used for regularization.
     """
     # Build layers.
-    with tf.variable_scope(self.name + '/prediction'):
+    with tf.variable_scope(f'{self.name}/prediction'):
       # We store all variables on which we apply weight decay in a dictionary.
       reg_params = {}
 
@@ -296,7 +296,7 @@ class ImageCNNAgreement(Model):
       loss: The cummulated loss value.
     """
     reg_params = reg_params if reg_params is not None else {}
-    weight_decay = kwargs['weight_decay'] if 'weight_decay' in kwargs else 0.004
+    weight_decay = kwargs.get('weight_decay', 0.004)
 
     with tf.name_scope(name_scope):
       # Cross entropy error.

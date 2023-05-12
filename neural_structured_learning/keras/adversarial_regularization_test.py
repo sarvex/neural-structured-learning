@@ -111,14 +111,13 @@ class AdversarialLossTest(tf.test.TestCase, parameterized.TestCase):
     return inputs, labels, model, loss_fn, expected_adv_loss
 
   def evaluate(self, *args, **kwargs):
-    if hasattr(tf.keras.backend, 'get_session'):
-      # Sets the Keras Session as default TF Session, so that the variable
-      # in Keras subclassed model can be initialized correctly. The variable
-      # is not created until the first call to the model, so the initialization
-      # is not captured in the global_variables_initializer above.
-      with tf.keras.backend.get_session().as_default():
-        return super(AdversarialLossTest, self).evaluate(*args, **kwargs)
-    else:
+    if not hasattr(tf.keras.backend, 'get_session'):
+      return super(AdversarialLossTest, self).evaluate(*args, **kwargs)
+    # Sets the Keras Session as default TF Session, so that the variable
+    # in Keras subclassed model can be initialized correctly. The variable
+    # is not created until the first call to the model, so the initialization
+    # is not captured in the global_variables_initializer above.
+    with tf.keras.backend.get_session().as_default():
       return super(AdversarialLossTest, self).evaluate(*args, **kwargs)
 
   @parameterized.named_parameters([

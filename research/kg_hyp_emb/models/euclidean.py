@@ -27,12 +27,10 @@ class BaseE(KGModel):
   """Base model class for Euclidean embeddings."""
 
   def get_rhs(self, input_tensor):
-    rhs = self.entity(input_tensor[:, 2])
-    return rhs
+    return self.entity(input_tensor[:, 2])
 
   def get_candidates(self,):
-    cands = self.entity.embeddings
-    return cands
+    return self.entity.embeddings
 
   def similarity_score(self, lhs, rhs, eval_mode):
     if self.sim == 'dot':
@@ -43,8 +41,7 @@ class BaseE(KGModel):
     elif self.sim == 'dist':
       score = -euc_utils.euc_sq_distance(lhs, rhs, eval_mode)
     else:
-      raise AttributeError('Similarity function {} not recognized'.format(
-          self.sim))
+      raise AttributeError(f'Similarity function {self.sim} not recognized')
     return score
 
 
@@ -189,5 +186,4 @@ class AttE(BaseE):
     att_weights = tf.reduce_sum(
         context_vec * cands * self.scale, axis=-1, keepdims=True)
     att_weights = tf.nn.softmax(att_weights, axis=-1)
-    res = tf.reduce_sum(att_weights * cands, axis=1) + rel
-    return res
+    return tf.reduce_sum(att_weights * cands, axis=1) + rel

@@ -215,11 +215,8 @@ def classifier(x: tf.Tensor, n_classes: int = 10) -> tf.Tensor:
   # Flatten into 1D vector
   x = GlobalAvgPool2D()(x)
 
-  # Final Dense Outputting Layer
-  outputs = Dense(n_classes, activation="softmax",
-   kernel_initializer="he_normal")(x)
-
-  return outputs
+  return Dense(n_classes, activation="softmax",
+               kernel_initializer="he_normal")(x)
 
 
 # -------------------

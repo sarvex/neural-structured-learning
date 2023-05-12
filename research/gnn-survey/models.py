@@ -83,14 +83,13 @@ class GCN(tf.keras.Model):
     ]
 
     # hidden layers
-    for i in range(1, self.num_layers - 1):
-      self.gc.append(
-          GCNBlock(
-              self.hidden_dim[i],
-              dropout_rate=dropout_rate,
-              sparse=sparse,
-              bias=bias))
-
+    self.gc.extend(
+        GCNBlock(
+            self.hidden_dim[i],
+            dropout_rate=dropout_rate,
+            sparse=sparse,
+            bias=bias,
+        ) for i in range(1, self.num_layers - 1))
     # output layer
     self.classifier = GraphConvLayer(
         self.num_classes, sparse=self.sparse, bias=self.bias)
@@ -102,8 +101,7 @@ class GCN(tf.keras.Model):
       features = self.gc[i](x)
 
     x = (features, adj)
-    outputs = self.classifier(x)
-    return outputs
+    return self.classifier(x)
 
 
 class GATBlock(tf.keras.layers.Layer):
@@ -176,14 +174,13 @@ class GAT(tf.keras.Model):
     ]
 
     # hidden layers
-    for i in range(1, self.num_layers - 1):
-      self.gat.append(
-          GATBlock(
-              self.hidden_dim[i],
-              dropout_rate=dropout_rate,
-              num_heads=self.num_heads,
-              sparse=sparse))
-
+    self.gat.extend(
+        GATBlock(
+            self.hidden_dim[i],
+            dropout_rate=dropout_rate,
+            num_heads=self.num_heads,
+            sparse=sparse,
+        ) for i in range(1, self.num_layers - 1))
     # output layer
     if sparse:
       self.classifier = SparseGraphAttnLayer(
@@ -199,8 +196,7 @@ class GAT(tf.keras.Model):
       features = self.gat[i](x)
 
     x = (features, adj)
-    outputs = self.classifier(x)
-    return outputs
+    return self.classifier(x)
 
 
 class GINBlock(tf.keras.layers.Layer):
@@ -268,15 +264,14 @@ class GIN(tf.keras.Model):
     self.sparse = sparse
     # input layer and hidden layers
     self.gin = []
-    for i in range(self.num_layers - 1):
-      self.gin.append(
-          GINBlock(
-              self.mlp_layers,
-              self.hidden_dim[i],
-              dropout_rate=dropout_rate,
-              learn_eps=learn_eps,
-              sparse=sparse))
-
+    self.gin.extend(
+        GINBlock(
+            self.mlp_layers,
+            self.hidden_dim[i],
+            dropout_rate=dropout_rate,
+            learn_eps=learn_eps,
+            sparse=sparse,
+        ) for i in range(self.num_layers - 1))
     # output layer
     self.classifier = GraphIsomorphismLayer(
         1,
@@ -292,5 +287,4 @@ class GIN(tf.keras.Model):
       features = self.gin[i](x)
 
     x = (features, adj)
-    outputs = self.classifier(x)
-    return outputs
+    return self.classifier(x)

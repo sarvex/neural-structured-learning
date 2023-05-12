@@ -37,9 +37,7 @@ class IoOpsTest(tf.test.TestCase):
 
   def test_save_knowledge_bank(self):
     # Adds an embedding with values [4, 5].
-    pattern1 = (
-        FLAGS.test_tmpdir + '/knowledge_bank_data_[0-9]+_[0-9]+_[0-9]+' +
-        '/emb1/embedding_store_meta_data.pbtxt')
+    pattern1 = f'{FLAGS.test_tmpdir}/knowledge_bank_data_[0-9]+_[0-9]+_[0-9]+/emb1/embedding_store_meta_data.pbtxt'
     de_ops.dynamic_embedding_update(['first'],
                                     tf.constant([4.0, 5.0]),
                                     self._config,
@@ -51,9 +49,7 @@ class IoOpsTest(tf.test.TestCase):
     self.assertRegex(saved_paths[0].numpy()[0].decode(), pattern1)
 
     # Add another embedding data.
-    pattern2 = (
-        FLAGS.test_tmpdir + '/knowledge_bank_data_[0-9]+_[0-9]+_[0-9]+' +
-        '/emb2/embedding_store_meta_data.pbtxt')
+    pattern2 = f'{FLAGS.test_tmpdir}/knowledge_bank_data_[0-9]+_[0-9]+_[0-9]+/emb2/embedding_store_meta_data.pbtxt'
     de_ops.dynamic_embedding_update(['first'],
                                     tf.constant([5.0, 6.0]),
                                     self._config,

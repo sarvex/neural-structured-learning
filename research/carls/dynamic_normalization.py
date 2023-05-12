@@ -117,7 +117,7 @@ class DynamicNormalization(tf.keras.layers.Layer):
   @property
   def _param_dtype(self):
     # Raise parameters of fp16 batch norm to fp32
-    if self.dtype == tf.dtypes.float16 or self.dtype == tf.dtypes.bfloat16:
+    if self.dtype in [tf.dtypes.float16, tf.dtypes.bfloat16]:
       return tf.dtypes.float32
     else:
       return self.dtype or tf.dtypes.float32
@@ -163,7 +163,7 @@ class DynamicNormalization(tf.keras.layers.Layer):
       if x < 0 or x >= ndims:
         raise ValueError('Invalid axis: %d' % x)
     if len(self.axis) != len(set(self.axis)):
-      raise ValueError('Duplicate axis: %s' % self.axis)
+      raise ValueError(f'Duplicate axis: {self.axis}')
 
     axis_to_dim = {x: input_shape.dims[x].value for x in self.axis}
     for x in axis_to_dim:
@@ -177,9 +177,7 @@ class DynamicNormalization(tf.keras.layers.Layer):
       param_shape = (list(axis_to_dim.values())[0],)
     else:
       # Parameter shape is the original shape but with 1 in all non-axis dims
-      param_shape = [
-          axis_to_dim[i] if i in axis_to_dim else 1 for i in range(ndims)
-      ]
+      param_shape = [axis_to_dim.get(i, 1) for i in range(ndims)]
 
     self.mean_offset = self._add_offset('mean_offset', param_shape)
     self.mean_scale = self._add_scale('mean_scale', param_shape)

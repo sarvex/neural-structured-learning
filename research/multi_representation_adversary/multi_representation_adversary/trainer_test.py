@@ -55,7 +55,7 @@ class TrainerTest(tf.test.TestCase):
       trainer.train(self.ckpt_dir.full_path, self.summary_dir.full_path)
 
     ckpt_path = os.path.join(self.ckpt_dir, "ckpt-2")
-    self.assertTrue(tf.io.gfile.exists(ckpt_path + ".index"))
+    self.assertTrue(tf.io.gfile.exists(f"{ckpt_path}.index"))
     variables = [name for name, shape in tf.train.list_variables(ckpt_path)]
     self.assertTrue(any(name.startswith("model") for name in variables))
     self.assertTrue(any(name.startswith("selector") for name in variables))

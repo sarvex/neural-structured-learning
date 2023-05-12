@@ -201,9 +201,9 @@ class GraphBuilder(object):
     """
     for src, tgt in itertools.combinations(bucket, 2):
       weight = np.dot(embeddings[src], embeddings[tgt])
-      if weight >= self.config.similarity_threshold:
-        if self.edge_set is None or self._is_new_edge(src, tgt):
-          yield (src, tgt, weight)
+      if weight >= self.config.similarity_threshold and (
+          self.edge_set is None or self._is_new_edge(src, tgt)):
+        yield (src, tgt, weight)
 
   def _generate_edges(self, embeddings):
     """Generates edges among pairs of the given `embeddings`.
@@ -226,7 +226,7 @@ class GraphBuilder(object):
       start_time = time.time()
       edge_cnt = 0
       bucket_map = self._generate_lsh_buckets(embeddings)
-      logging_prefix = 'LSH bucketing round {}'.format(lsh_round)
+      logging_prefix = f'LSH bucketing round {lsh_round}'
       logging.info('%s: created %d bucket(s) in %.2f seconds.', logging_prefix,
                    len(bucket_map),
                    time.time() - start_time)

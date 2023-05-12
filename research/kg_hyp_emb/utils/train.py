@@ -42,10 +42,7 @@ def count_params(model):
   Returns:
     Integer representing the number of trainable variables.
   """
-  total = 0
-  for x in model.trainable_variables:
-    total += np.prod(x.shape)
-  return total
+  return sum(np.prod(x.shape) for x in model.trainable_variables)
 
 
 def avg_both(mrs, mrrs, hits):
@@ -61,9 +58,7 @@ def avg_both(mrs, mrrs, hits):
   """
   mr = (mrs['lhs'] + mrs['rhs']) / 2.
   mrr = (mrrs['lhs'] + mrrs['rhs']) / 2.
-  h = []
-  for k in [1, 3, 10]:
-    h += [(hits['lhs'][k] + hits['rhs'][k]) / 2.]
+  h = [(hits['lhs'][k] + hits['rhs'][k]) / 2. for k in [1, 3, 10]]
   return {'MR': mr, 'MRR': mrr, 'hits@[1,3,10]': h}
 
 
@@ -77,8 +72,8 @@ def format_metrics(metrics, split):
   Returns:
     String with formatted metrics.
   """
-  result = '\t {} MR: {:.2f} | '.format(split, metrics['MR'])
-  result += 'MRR: {:.3f} | '.format(metrics['MRR'])
+  result = '\t {} MR: {:.2f} | '.format(
+      split, metrics['MR']) + 'MRR: {:.3f} | '.format(metrics['MRR'])
   result += 'H@1: {:.3f} | '.format(metrics['hits@[1,3,10]'][0])
   result += 'H@3: {:.3f} | '.format(metrics['hits@[1,3,10]'][1])
   result += 'H@10: {:.3f}'.format(metrics['hits@[1,3,10]'][2])

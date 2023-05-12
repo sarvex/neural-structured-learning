@@ -200,12 +200,13 @@ def make_mlp_functional_model(hparams):
       hparams.num_classes, activation='softmax')(
           cur_layer)
 
-  model = tf.keras.Model(inputs, outputs=outputs)
-  return model
+  return tf.keras.Model(inputs, outputs=outputs)
 
 
 def make_mlp_subclass_model(hparams):
   """Creates a multi-layer perceptron subclass model in Keras."""
+
+
 
   class MLP(tf.keras.Model):
     """Subclass model defining a multi-layer perceptron."""
@@ -228,9 +229,8 @@ def make_mlp_subclass_model(hparams):
         cur_layer = dense_layer(cur_layer)
         cur_layer = self.dropout_layer(cur_layer, training=training)
 
-      outputs = self.output_layer(cur_layer)
+      return self.output_layer(cur_layer)
 
-      return outputs
 
   return MLP()
 
@@ -316,12 +316,11 @@ def start_server():
 
 def build_model(base_model_tag, hparams):
   if base_model_tag == 'FUNCTIONAL':
-    model = make_mlp_functional_model(hparams)
+    return make_mlp_functional_model(hparams)
   elif base_model_tag == 'SEQUENTIAL':
-    model = make_mlp_sequential_model(hparams)
+    return make_mlp_sequential_model(hparams)
   else:
-    model = make_mlp_subclass_model(hparams)
-  return model
+    return make_mlp_subclass_model(hparams)
 
 
 def update_embeddings(
@@ -409,8 +408,7 @@ def main(argv):
 
     train_dataset = make_dataset(train_data_path, True, True, hparams)
     test_dataset = make_dataset(test_data_path, False, False, hparams)
-    graph_model_path = os.path.join(
-        FLAGS.output_dir, 'model_' + base_model_tag)
+    graph_model_path = os.path.join(FLAGS.output_dir, f'model_{base_model_tag}')
 
     # Start a background thread to update emebddings.
     stop_event = threading.Event()

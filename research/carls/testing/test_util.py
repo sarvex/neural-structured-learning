@@ -107,7 +107,7 @@ def default_dm_config(per_cluster_buffer_size: int,
     raise ValueError("Invalid distance_to_cluster_threshold: %d" %
                      distance_to_cluster_threshold)
   if max_num_clusters <= 0:
-    raise ValueError("Invalid max_num_clusters: {}".format(max_num_clusters))
+    raise ValueError(f"Invalid max_num_clusters: {max_num_clusters}")
 
   config = de_config_pb2.DynamicEmbeddingConfig()
   text_format.Parse(
@@ -133,6 +133,4 @@ def start_kbs_server():
   """Starts a local KBS server and returns its handler."""
   # Starts a local KBS server.
   options = kbs_server_helper.KnowledgeBankServiceOptions(True, -1, 10)
-  server = kbs_server_helper.KbsServerHelper(options)
-  # Placeholder for setting --kbs_address.
-  return server
+  return kbs_server_helper.KbsServerHelper(options)

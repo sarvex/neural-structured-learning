@@ -36,12 +36,11 @@ class DatasetFn(object):
     self.debug = debug
     self.data = {}
     for split in ['train', 'test', 'valid']:
-      file_path = os.path.join(self.data_path, split + '.pickle')
+      file_path = os.path.join(self.data_path, f'{split}.pickle')
       with open(file_path, 'rb') as in_file:
         self.data[split] = pkl.load(in_file)
-    filters_file = open(os.path.join(self.data_path, 'to_skip.pickle'), 'rb')
-    self.to_skip = pkl.load(filters_file)
-    filters_file.close()
+    with open(os.path.join(self.data_path, 'to_skip.pickle'), 'rb') as filters_file:
+      self.to_skip = pkl.load(filters_file)
     max_axis = np.max(self.data['train'], axis=0)
     self.n_entities = int(max(max_axis[0], max_axis[2]) + 1)
     self.n_predicates = int(max_axis[1] + 1) * 2

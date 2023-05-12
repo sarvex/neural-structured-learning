@@ -886,7 +886,7 @@ class StripNeighborFeaturesTest(tf.test.TestCase):
 
   def testEmptyFeatures(self):
     """Tests strip_neighbor_features with empty input."""
-    features = dict()
+    features = {}
     neighbor_config = configs.GraphNeighborConfig()
     sample_features = utils.strip_neighbor_features(features, neighbor_config)
 

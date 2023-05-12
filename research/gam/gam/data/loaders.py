@@ -105,7 +105,7 @@ def load_data_realistic_ssl(dataset_name, data_path, label_map_path):
   feature_preproc_fn = ((lambda image: image)
                         if dataset_name == 'cifar10' else convert_image)
 
-  data = Dataset.build_from_splits(
+  return Dataset.build_from_splits(
       name=dataset_name,
       inputs_train=train_inputs,
       labels_train=train_labels,
@@ -115,8 +115,8 @@ def load_data_realistic_ssl(dataset_name, data_path, label_map_path):
       labels_test=test_labels,
       inputs_unlabeled=unlabeled_inputs,
       labels_unlabeled=unlabeled_labels,
-      feature_preproc_fn=feature_preproc_fn)
-  return data
+      feature_preproc_fn=feature_preproc_fn,
+  )
 
 
 def load_from_planetoid_files(dataset_name, path):

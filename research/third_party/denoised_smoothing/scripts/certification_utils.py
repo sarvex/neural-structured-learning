@@ -56,9 +56,8 @@ class Smooth():
     pa_bar = self._lower_confidence_bound(na, n, alpha)
     if pa_bar < 0.5:
       return Smooth.ABSTAIN, 0.0
-    else:
-      radius = self.sigma * norm.ppf(pa_bar)
-      return c_hat, radius
+    radius = self.sigma * norm.ppf(pa_bar)
+    return c_hat, radius
 
   def predict(self, x: np.ndarray, n: int, alpha: float,
     batch_size: int) -> int:

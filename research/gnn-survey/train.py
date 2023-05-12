@@ -79,10 +79,9 @@ def train(model, adj, features, labels, idx_train, idx_val, idx_test):
     val_loss = loss_fn(labels[idx_val], output[idx_val])
     val_acc = cal_acc(labels[idx_val], output[idx_val])
 
-    if FLAGS.save_best_val:
-      if val_acc >= best_val_acc:
-        best_val_acc = val_acc
-        model.save(FLAGS.save_dir)
+    if FLAGS.save_best_val and val_acc >= best_val_acc:
+      best_val_acc = val_acc
+      model.save(FLAGS.save_dir)
 
     print('[%03d/%03d] %.2f sec(s) Train Acc: %.3f Loss: %.6f | Val Acc: %.3f loss: %.6f' % \
          (epoch + 1, FLAGS.epochs, time.time()-epoch_start_time, \
@@ -99,15 +98,11 @@ def train(model, adj, features, labels, idx_train, idx_val, idx_test):
 
 def main(_):
 
-  if FLAGS.gpu == -1:
-    device = '/cpu:0'
-  else:
-    device = '/gpu:{}'.format(FLAGS.gpu)
-
+  device = '/cpu:0' if FLAGS.gpu == -1 else f'/gpu:{FLAGS.gpu}'
   with tf.device(device):
     tf.random.set_seed(FLAGS.seed)
     # Load the dataset and process features and adj matrix
-    print('Loading {} dataset...'.format(FLAGS.dataset))
+    print(f'Loading {FLAGS.dataset} dataset...')
     adj, features, labels, idx_train, idx_val, idx_test = load_dataset(
         FLAGS.dataset, FLAGS.sparse_features, FLAGS.normalize_adj)
     num_classes = max(labels) + 1

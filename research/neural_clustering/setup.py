@@ -13,11 +13,12 @@
 # limitations under the License.
 """Setup file for Neural Clustering."""
 
+
 import setuptools
 
 package_name = "neural_clustering"
 packages = [package_name]
-packages += [package_name + "." + x for x in setuptools.find_packages()]
+packages += [f"{package_name}.{x}" for x in setuptools.find_packages()]
 
 setuptools.setup(
     name=package_name,

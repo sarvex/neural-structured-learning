@@ -66,14 +66,8 @@ class Graph(object):
     if add_inverse_edge:
       self.inverse_relation_prefix = "INVERSE:"
     # vocab maps from name to integer id
-    if entity_vocab:
-      self.entity_vocab = entity_vocab
-    else:
-      self.entity_vocab = {}
-    if relation_vocab:
-      self.relation_vocab = relation_vocab
-    else:
-      self.relation_vocab = {}
+    self.entity_vocab = entity_vocab if entity_vocab else {}
+    self.relation_vocab = relation_vocab if relation_vocab else {}
     self.ent_vocab_size = len(self.entity_vocab)
     self.rel_vocab_size = len(self.relation_vocab)
     self._num_edges = 0
@@ -117,18 +111,14 @@ class Graph(object):
 
   def get_inverse_relation_from_name(self, rname):
     """Given a relation name, get the name of inverse relation."""
-    if rname.startswith(self.inverse_relation_prefix):
-      inv_rname = rname.strip(self.inverse_relation_prefix)
-    else:
-      inv_rname = self.inverse_relation_prefix + rname
-    return inv_rname
+    return (rname.strip(self.inverse_relation_prefix) if rname.startswith(
+        self.inverse_relation_prefix) else self.inverse_relation_prefix + rname)
 
   def get_inverse_relation_from_id(self, r):
     """Given a relation id (from vocab), get the id of the inverse relation."""
     rname = self.inverse_relation_vocab[r]
     inv_rname = self.get_inverse_relation_from_name(rname)
-    inv_r = self.relation_vocab[inv_rname]
-    return inv_r
+    return self.relation_vocab[inv_rname]
 
   def _max_neighbors(self):
     """Helper to find neighbors statistics."""
@@ -230,9 +220,7 @@ class Graph(object):
     if not self.max_kg_relations:
       max_out = 0
       for e1 in self.kg_data:
-        nout = 0
-        for e2 in self.kg_data[e1]:
-          nout += len(self.kg_data[e1][e2])
+        nout = sum(len(self.kg_data[e1][e2]) for e2 in self.kg_data[e1])
         max_out = max(max_out, nout)
       logging.info("Max outgoing rels kg: %d", max_out)
       self.max_kg_relations = max_out
@@ -352,14 +340,9 @@ class Graph(object):
         #     # import ipdb; ipdb.set_trace()
         #     break
         # import ipdb; ipdb.set_trace()
-        if e2 in self.kg_data[e1]:
-          rels = self.kg_data[e1][e2]
-        else:
-          rels = []
+        rels = self.kg_data[e1][e2] if e2 in self.kg_data[e1] else []
         if len(rels) > nrels:
           rels = np.random.choice(rels, size=nrels, replace=False)
-        # if e2 in answers:
-          # take all positive relations
         for rel in rels:
           # if nactions >= 0.5 * self.max_kg_relations:
           #     break

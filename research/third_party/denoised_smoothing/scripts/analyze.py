@@ -61,17 +61,21 @@ def plot_certified_accuracy_per_sigma_against_baseline(outfile: str, title: str,
                             methods: List[Line]=None, label='Ours', methods_base: List[Line]=None, label_base='Baseline', radius_step: float = 0.01, upper_bounds=False) -> None:
     color = ['b', 'orange', 'g', 'r']
 
-    sigmas = [0.12, 0.25, 0.5, 1.00]
-    if "api" in outfile:
-        sigmas = [0.12, 0.25]
-
+    sigmas = [0.12, 0.25] if "api" in outfile else [0.12, 0.25, 0.5, 1.00]
     for it, sigma in enumerate(sigmas):
         methods_sigma = [method for method in methods if '{:.2f}'.format(sigma) in method.quantity.data_file_path]
         accuracies_cert_ours, radii = _get_accuracies_at_radii(methods_sigma, 0, max_radius, radius_step)
         plt.plot(radii, accuracies_cert_ours.max(0), color[it], label='{}|$\sigma = {:.2f}$'.format(label, sigma))
 
     for it, line in enumerate(methods_base):
-        plt.plot(radii * line.scale_x, line.quantity.at_radii(radii), color[it], dashes=[2, 2], alpha=line.alpha, label='{}|'.format(label_base)+line.legend)
+        plt.plot(
+            radii * line.scale_x,
+            line.quantity.at_radii(radii),
+            color[it],
+            dashes=[2, 2],
+            alpha=line.alpha,
+            label=f'{label_base}|' + line.legend,
+        )
 
     plt.ylim((0, 1))
     plt.xlim((0, max_radius))
@@ -82,10 +86,10 @@ def plot_certified_accuracy_per_sigma_against_baseline(outfile: str, title: str,
         plt.gca().xaxis.set_major_locator(plt.MultipleLocator(0.5))
     plt.legend(loc='upper right', fontsize=16)
     plt.tight_layout()
-    plt.savefig(outfile + ".pdf")
+    plt.savefig(f"{outfile}.pdf")
     plt.title(title, fontsize=20)
     plt.tight_layout()
-    plt.savefig(outfile + ".png", dpi=300)
+    plt.savefig(f"{outfile}.png", dpi=300)
     plt.close()
 
 
@@ -93,24 +97,27 @@ def plot_certified_accuracy_per_sigma_against_baseline_finetune(outfile: str, ti
                             methods: List[Line]=None, label='Ours', methods_finetune=None, label_finetune="Finetune", methods_base: List[Line]=None, label_base='Baseline', radius_step: float = 0.01, upper_bounds=False) -> None:
     color = ['b', 'orange', 'g', 'r']
 
-    sigmas = [0.12, 0.25, 0.5, 1.00]
-    if "api" in outfile:
-        sigmas = [0.25]
-
-    for it, sigma in enumerate(sigmas):
+    sigmas = [0.25] if "api" in outfile else [0.12, 0.25, 0.5, 1.00]
+    for sigma in sigmas:
         methods_eps = [method for method in methods_finetune if '{:.2f}'.format(sigma) in method.quantity.data_file_path]
         accuracies_cert_ours, radii = _get_accuracies_at_radii(methods_eps, 0, max_radius, radius_step)
         plt.plot(radii, accuracies_cert_ours.max(0), color[3], label='{}|$\sigma = {:.2f}$'.format(label_finetune, sigma))
 
-    for it, sigma in enumerate(sigmas):
+    for sigma in sigmas:
         methods_eps = [method for method in methods if '{:.2f}'.format(sigma) in method.quantity.data_file_path]
         accuracies_cert_ours, radii = _get_accuracies_at_radii(methods_eps, 0, max_radius, radius_step)
         plt.plot(radii, accuracies_cert_ours.max(0), color[0], label='{}|$\sigma = {:.2f}$'.format(label, sigma))
 
-    for it, line in enumerate(methods_base):
+    for line in methods_base:
         if "0.25" not in line.quantity.data_file_path:
             continue
-        plt.plot(radii * line.scale_x, line.quantity.at_radii(radii), color[1],             alpha=line.alpha, label='{}|'.format(label_base)+line.legend)
+        plt.plot(
+            radii * line.scale_x,
+            line.quantity.at_radii(radii),
+            color[1],
+            alpha=line.alpha,
+            label=f'{label_base}|' + line.legend,
+        )
 
     plt.ylim((0, 1))
     plt.xlim((0, max_radius))
@@ -121,10 +128,10 @@ def plot_certified_accuracy_per_sigma_against_baseline_finetune(outfile: str, ti
         plt.gca().xaxis.set_major_locator(plt.MultipleLocator(0.5))
     plt.legend(loc='upper right', fontsize=16)
     plt.tight_layout()
-    plt.savefig(outfile + ".pdf")
+    plt.savefig(f"{outfile}.pdf")
     plt.title(title, fontsize=20)
     plt.tight_layout()
-    plt.savefig(outfile + ".png", dpi=300)
+    plt.savefig(f"{outfile}.png", dpi=300)
     plt.close()
 
 
@@ -150,17 +157,17 @@ def plot_certified_accuracy_per_sigma_best_model(outfile: str, title: str, max_r
     plt.gca().xaxis.set_major_locator(plt.MultipleLocator(0.5))
     plt.legend(loc='upper right', fontsize=16)
     plt.tight_layout()
-    plt.savefig(outfile + ".pdf")
+    plt.savefig(f"{outfile}.pdf")
     plt.title(title, fontsize=20)
     plt.tight_layout()
-    plt.savefig(outfile + ".png", dpi=300)
+    plt.savefig(f"{outfile}.png", dpi=300)
     plt.close()
 
 
 def plot_certified_accuracy_one_sigma_best_model_multiple_methods(outfile: str, title: str, max_radius: float,
                             methods_labels_colors_dashes: List,
                             radius_step: float = 0.01, upper_bounds=False, sigma=0.25) -> None:
-    for it, (methods, label, color, dashes) in enumerate(methods_labels_colors_dashes):
+    for methods, label, color, dashes in methods_labels_colors_dashes:
         methods_sigma = [method for method in methods if '{:.2f}'.format(sigma) in method.quantity.data_file_path]
         accuracies_cert_ours, radii = _get_accuracies_at_radii(methods_sigma, 0, max_radius, radius_step)
         accuracies_cert_ours = np.nan_to_num(accuracies_cert_ours, -1)
@@ -175,10 +182,10 @@ def plot_certified_accuracy_one_sigma_best_model_multiple_methods(outfile: str, 
     plt.gca().xaxis.set_major_locator(plt.MultipleLocator(0.5))
     plt.legend(loc='upper right', fontsize=16)
     plt.tight_layout()
-    plt.savefig(outfile + ".pdf")
+    plt.savefig(f"{outfile}.pdf")
     plt.title(title, fontsize=20)
     plt.tight_layout()
-    plt.savefig(outfile + ".png", dpi=300)
+    plt.savefig(f"{outfile}.png", dpi=300)
     plt.close()
 
 
@@ -188,29 +195,27 @@ def latex_table_certified_accuracy_upper_envelope(outfile: str, radius_start: fl
     clean_accuracies, _ = _get_accuracies_at_radii(methods, 0, 0, 0.25)
     assert clean_accuracies.shape[1] == 1
 
-    f = open(outfile, 'w')
+    with open(outfile, 'w') as f:
+        f.write("$\ell_2$ Radius")
+        for radius in radii:
+            f.write("& ${:.3}$".format(radius))
+        f.write("\\\\\n")
 
-    f.write("$\ell_2$ Radius")
-    for radius in radii:
-        f.write("& ${:.3}$".format(radius))
-    f.write("\\\\\n")
+        f.write("\midrule\n")
 
-    f.write("\midrule\n")
-
-    clean_accuracies = np.nan_to_num(clean_accuracies, -1)
-    accuracies = np.nan_to_num(accuracies, -1)
-    for j, radius in enumerate(radii):
-        argmaxs = np.argwhere(accuracies[:,j] == accuracies[:, j].max())
-        argmaxs = argmaxs.flatten()
-        i = argmaxs[clean_accuracies[argmaxs, 0].argmax()]
-        # i = i.flatten()[0]
-        if clean_accuracy:
-            txt = " & $^{("+"{:.2f})".format(clean_accuracies[i, 0]) + "}" + "${:.2f}".format(accuracies[i, j])
-        else:
-            txt = " & {:.2f}".format(accuracies[i, j])
-        f.write(txt)
-    f.write("\\\\\n")
-    f.close()
+        clean_accuracies = np.nan_to_num(clean_accuracies, -1)
+        accuracies = np.nan_to_num(accuracies, -1)
+        for j, radius in enumerate(radii):
+            argmaxs = np.argwhere(accuracies[:,j] == accuracies[:, j].max())
+            argmaxs = argmaxs.flatten()
+            i = argmaxs[clean_accuracies[argmaxs, 0].argmax()]
+            # i = i.flatten()[0]
+            if clean_accuracy:
+                txt = " & $^{("+"{:.2f})".format(clean_accuracies[i, 0]) + "}" + "${:.2f}".format(accuracies[i, j])
+            else:
+                txt = " & {:.2f}".format(accuracies[i, j])
+            f.write(txt)
+        f.write("\\\\\n")
 
 def _get_accuracies_at_radii(methods: List[Line], radius_start: float, radius_stop: float, radius_step: float):
     radii = np.arange(radius_start, radius_stop + radius_step, radius_step)

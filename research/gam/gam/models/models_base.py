@@ -22,9 +22,11 @@ import tensorflow as tf
 def glorot(shape, name=None):
   """Glorot & Bengio (AISTATS 2010) initialization."""
   init_range = np.sqrt(6.0 / (shape[0] + shape[1]))
-  initial = tf.random_uniform(
-      shape, minval=-init_range, maxval=init_range, dtype=tf.float32, name=name)
-  return initial
+  return tf.random_uniform(shape,
+                           minval=-init_range,
+                           maxval=init_range,
+                           dtype=tf.float32,
+                           name=name)
 
 
 class Model(object):
@@ -164,13 +166,15 @@ class Model(object):
       for layer_index, num_units in enumerate(self.hidden_aggregation):
         input_size = hidden.get_shape().dims[-1].value
         weights = tf.get_variable(
-            'W_' + str(layer_index),
+            f'W_{str(layer_index)}',
             initializer=glorot((input_size, num_units)),
-            use_resource=True)
+            use_resource=True,
+        )
         bias = tf.get_variable(
-            'b_' + str(layer_index),
-            shape=(num_units,),
+            f'b_{str(layer_index)}',
+            shape=(num_units, ),
             initializer=tf.zeros_initializer(),
-            use_resource=True)
+            use_resource=True,
+        )
         hidden = self.activation(tf.nn.xw_plus_b(hidden, weights, bias))
       return hidden

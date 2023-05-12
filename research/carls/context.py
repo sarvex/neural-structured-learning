@@ -54,7 +54,7 @@ def add_to_collection(name: Text, config: de_config_pb2.DynamicEmbeddingConfig):
 def get_all_collection():
   """Returns a list of all (name, config) pairs."""
   with _lock:
-    return [(key, value) for key, value in _knowledge_bank_collections.items()]
+    return list(_knowledge_bank_collections.items())
 
 
 def clear_all_collection():

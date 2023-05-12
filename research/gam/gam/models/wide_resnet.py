@@ -170,7 +170,7 @@ class WideResnet(Model):
         parameters which will be used for regularization.
     """
     # Logits layer.
-    with tf.variable_scope(self.name + "/prediction"):
+    with tf.variable_scope(f"{self.name}/prediction"):
       w_init = tf.glorot_normal_initializer()
       logits = tf.layers.dense(
           encoding, self.num_classes, kernel_initializer=w_init)
@@ -313,7 +313,7 @@ class WideResnet(Model):
                name_scope="loss",
                reg_params=None,
                **kwargs):
-    weight_decay = kwargs["weight_decay"] if "weight_decay" in kwargs else 0.0
+    weight_decay = kwargs.get("weight_decay", 0.0)
 
     with tf.name_scope(name_scope):
       if self.is_binary_classification:

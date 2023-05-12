@@ -44,8 +44,7 @@ def mrr(scores, candidates, labels):
   )
   # +1 because top rank should be 1 not 0
   ranks = label_rank_indices[:, 1] + 1
-  rr = 1.0 / tf.cast(ranks, tf.float32)
-  return rr  # , ranks, label_rank_indices, sorted_candidates, top_score_ids
+  return 1.0 / tf.cast(ranks, tf.float32)
 
 
 def hits_at_k(scores, candidates, labels, k=10):
@@ -66,8 +65,5 @@ def hits_at_k(scores, candidates, labels, k=10):
   indices = tf.concat([tf.expand_dims(batch_indices, axis=-1),
                        tf.expand_dims(top_score_ids, -1)], -1)
   sorted_candidates = tf.gather_nd(candidates, indices)
-  # label_ids = tf.expand_dims(tf.argmax(labels, axis=1), 1)
-  hits = tf.reduce_max(
-      tf.cast(tf.equal(sorted_candidates, labels), tf.float32), 1
-  )
-  return hits  # , sorted_candidates, top_score_ids
+  return tf.reduce_max(
+      tf.cast(tf.equal(sorted_candidates, labels), tf.float32), 1)

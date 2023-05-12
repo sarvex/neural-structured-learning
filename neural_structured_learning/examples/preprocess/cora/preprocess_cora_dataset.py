@@ -236,7 +236,7 @@ def _join_examples(seed_exs, nbr_exs, graph, max_nbrs):
     for index, (nbr_wt, nbr_id) in enumerate(nbr_wt_ex_list):
       prefix = 'NL_nbr_{}_'.format(index)
       # Add the edge weight value as a new singleton float feature.
-      weight_feature = prefix + 'weight'
+      weight_feature = f'{prefix}weight'
       merged_ex.features.feature[weight_feature].float_list.value.append(nbr_wt)
       # Copy each of the neighbor Examples features, prefixed with 'prefix'.
       nbr_ex = lookup_ex(nbr_id)

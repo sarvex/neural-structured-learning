@@ -92,8 +92,7 @@ def split_train_val_unlabeled(train_inputs,
   num_val = target_num_val
   num_classes = max(train_labels) + 1
 
-  assert target_num_val < num_train, 'Too many validation samples required.'
-
+  assert num_val < num_train, 'Too many validation samples required.'
   # Split the train samples into train and validation.
   ind = np.arange(0, num_train)
   rng = np.random.RandomState(seed)

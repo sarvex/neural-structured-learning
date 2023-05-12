@@ -26,15 +26,16 @@ import tensorflow as tf
 def get_graph_nbrhd(train_graph, ent, exclude_tuple):
   """Helper to get neighbor entities excluding a particular tuple."""
   es, er, et = exclude_tuple
-  neighborhood = [nbr for nbr in train_graph.kg_data[ent]
-                  if ent != es or nbr != et or
-                  # er not in train_graph.kg_data[ent][nbr]]
-                  (train_graph.kg_data[ent][nbr] - set([er]))]
+  neighborhood = [
+      nbr for nbr in train_graph.kg_data[ent]
+      if ent != es or nbr != et or train_graph.kg_data[ent][nbr] - {er}
+  ]
   if train_graph.add_reverse_graph:
-    rev_nighborhood = [nbr for nbr in train_graph.reverse_kg_data[ent]
-                       if ent != et or nbr != es or
-                       # er not in train_graph.reverse_kg_data[ent][nbr]]
-                       (train_graph.reverse_kg_data[ent][nbr] - set([er]))]
+    rev_nighborhood = [
+        nbr for nbr in train_graph.reverse_kg_data[ent]
+        if ent != et or nbr != es or train_graph.reverse_kg_data[ent][nbr] -
+        {er}
+    ]
     neighborhood += rev_nighborhood
   neighborhood = np.array(list(set(neighborhood)), dtype=np.int)
   return neighborhood
@@ -66,20 +67,12 @@ def get_graph_nbrhd_text(train_graph, ent, max_text_len):
     for text in train_graph.kg_text_data[ent][nbr]:
       text_edge = [nbr] + text
       text_edge = text_edge[:max_text_len+1]
-      len_to_pad = max_text_len + 1 - len(text_edge)
-      if len_to_pad:
+      if len_to_pad := max_text_len + 1 - len(text_edge):
         text_edge += [train_graph.vocab[train_graph.mask_token]] * len_to_pad
       neighborhood.append(text_edge)
   if not neighborhood:
     neighborhood = [[]]
-  # if train_graph.add_reverse_graph:
-  #   rev_nighborhood = [nbr for nbr in train_graph.reverse_kg_data[ent]
-  #                      if ent != et or nbr != es or
-  #                      # er not in train_graph.reverse_kg_data[ent][nbr]]
-  #                      (train_graph.reverse_kg_data[ent][nbr] - set([er]))]
-  #   neighborhood += rev_nighborhood
-  neighborhood = np.array(neighborhood, dtype=np.int)
-  return neighborhood
+  return np.array(neighborhood, dtype=np.int)
 
 
 def get_graph_nbrhd_embd_text(train_graph, ent, max_text_nbrs):
@@ -139,9 +132,8 @@ def _proc_paths(paths, er=None, et=None, max_length=1, pad=(-1, -1)):
   for path in paths:
     p = map(int, path.strip().split(" "))
     p += list(pad)*(max_length - int(0.5*len(p)))
-    if er:
-      if p[0] == er and p[1] == et:
-        continue
+    if er and p[0] == er and p[1] == et:
+      continue
     out.append(p)
   return out
 
@@ -183,7 +175,7 @@ def get_graph_nbrhd_paths_randwalk(train_graph, ent, exclude_tuple,
   nsample_per_step = int(max_paths ** (1.0 / train_graph.max_path_length))
   neighborhood = []
   # paths of length one
-  init_edges = list(train_graph.next_edges[ent] - set((er, et)))
+  init_edges = list(train_graph.next_edges[ent] - {er, et})
   current_paths = _sample_next_edges(init_edges, nsample_per_step)
   current_paths = map(list, current_paths)
   # import pdb; pdb.set_trace()
@@ -206,25 +198,18 @@ def get_graph_nbrhd_paths_randwalk(train_graph, ent, exclude_tuple,
         next_edges = _sample_next_edges(list(train_graph.next_edges[last_ent]),
                                         nsample_per_step)
         # outlog += "next_edges:" +  str(next_edges) + "\n"
-        for r, e2 in next_edges:
-          # outlog += "\t edge:" + str(r) + str(e2) + "\n"
-          if e2 in prev_ents:
-            # outlog += "skipped " + str(e2) + "\n"
-            continue
-          next_paths.append(path + [r, e2])
-        # outlog += "next_paths:" +  str(next_paths) + "\n"
+        next_paths.extend(path + [r, e2] for r, e2 in next_edges
+                          if e2 not in prev_ents)
+              # outlog += "next_paths:" +  str(next_paths) + "\n"
     current_paths = next_paths
   if current_paths:
-    for path in current_paths:
-      neighborhood.append(path + list(pad)*(max_length - int(0.5*len(path))))
-
+    neighborhood.extend(path + list(pad) * (max_length - int(0.5 * len(path)))
+                        for path in current_paths)
   # outlog += "final: " + str(neighborhood) + "\n"
   # print(outlog)
   if not neighborhood:
     neighborhood = [[]]
-  # import pdb; pdb.set_trace()
-  neighborhood = np.array(neighborhood, dtype=np.int)
-  return neighborhood
+  return np.array(neighborhood, dtype=np.int)
 
 
 def sample_or_pad(arr, max_size, pad_value=-1):
@@ -285,15 +270,12 @@ class Dataset(object):
     self.train_graph = train_graph
     self.data_graph = data_graph
     self.mode = mode
-    if mode != "train":
-      if max_negatives:
-        self.max_negatives = max_negatives
-      else:
-        self.max_negatives = train_graph.ent_vocab_size - 1
-    else:
-      if not max_negatives and mode == "train":
-        raise ValueError("Must provide max_negatives value for training.")
+    if mode == "train" and not max_negatives:
+      raise ValueError("Must provide max_negatives value for training.")
+    elif mode == "train" or max_negatives:
       self.max_negatives = max_negatives
+    else:
+      self.max_negatives = train_graph.ent_vocab_size - 1
     if max_neighbors:
       self.max_neighbors = max_neighbors
     else:
@@ -344,9 +326,8 @@ class Dataset(object):
         # switch s and t
         s, t = t, s
     candidate_negatives = list(
-        self.train_graph.all_entities -
-        (all_targets | set([t]) | set([self.train_graph.ent_pad]))
-    )
+        (self.train_graph.all_entities -
+         (all_targets | {t} | {self.train_graph.ent_pad})))
     # if len(candidate_negatives) > self.max_negatives:
     #   negatives = np.random.choice(candidate_negatives,
     #                                size=self.max_negatives,
@@ -372,7 +353,7 @@ class Dataset(object):
           pad=(self.train_graph.rel_pad, self.train_graph.ent_pad)
       )
       pad_value = [self.train_graph.rel_pad, self.train_graph.ent_pad] * \
-        self.train_graph.max_path_length
+          self.train_graph.max_path_length
     else:
       nbrhd_fn = get_graph_nbrhd
       pad_value = self.train_graph.ent_pad
@@ -390,8 +371,8 @@ class Dataset(object):
             self.train_graph, s, self.max_text_neighbors)
       elif self.max_text_len:
         text_pad_value = [self.train_graph.ent_pad] + \
-              [self.train_graph.vocab[self.train_graph.mask_token]] * \
-              self.max_text_len
+                [self.train_graph.vocab[self.train_graph.mask_token]] * \
+                self.max_text_len
         text_nbrs_s = sample_or_pad(
             get_graph_nbrhd_text(self.train_graph, s, self.max_text_len),
             self.max_text_neighbors, pad_value=text_pad_value
@@ -428,7 +409,7 @@ class Dataset(object):
     # import ipdb; ipdb.set_trace()
     if isinstance(self.train_graph, clueweb_text_graph.CWTextGraph):
       return s, nbrs_s, text_nbrs_s, r, candidates, nbrs_candidates, labels, \
-             text_nbrs_s_emb
+               text_nbrs_s_emb
     elif self.max_text_len:
       return s, nbrs_s, text_nbrs_s, r, candidates, nbrs_candidates, labels
     return s, nbrs_s, r, candidates, nbrs_candidates, labels
@@ -461,8 +442,7 @@ class Dataset(object):
     # pylint: disable=g-long-lambda
     output_dtypes = [tf.int64, tf.int64, tf.int64, tf.int64, tf.int64, tf.int64]
     if isinstance(self.train_graph, clueweb_text_graph.CWTextGraph):
-      output_dtypes.append(tf.int64)
-      output_dtypes.append(tf.float32)
+      output_dtypes.extend((tf.int64, tf.float32))
     elif self.max_text_len:
       output_dtypes.append(tf.int64)
     dataset = dataset.map(lambda example_tuple: tf.py_func(

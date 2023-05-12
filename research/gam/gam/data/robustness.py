@@ -84,7 +84,7 @@ def add_noisy_edges(data, target_ratio_correct, symmetrical=True):
   if symmetrical:
     # We add half as many edges, because each edge is now added in both
     # directions.
-    num_edges_to_add = num_edges_to_add // 2
+    num_edges_to_add //= 2
   for _ in range(num_edges_to_add):
     added = False
     while not added:

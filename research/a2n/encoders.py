@@ -32,9 +32,7 @@ class Encoder(object):
     self.collection[name] = tensor
 
   def get_from_collection(self, name):
-    if name not in self.collection:
-      return None
-    return self.collection[name]
+    return None if name not in self.collection else self.collection[name]
 
   def make_feed_dict(self):
     raise NotImplementedError("No make_feed_dict implementation")
@@ -75,12 +73,11 @@ class EmbeddingLookup(Encoder):
     )
     if self.use_tanh:
       embedding_layer = tf.nn.tanh(embedding_layer)
-    output = tf.cond(
+    return tf.cond(
         self.is_train,
         lambda: tf.nn.dropout(embedding_layer, self.dropout, name="dropout"),
-        lambda: embedding_layer
+        lambda: embedding_layer,
     )
-    return output
 
   def make_feed_dict(self):
     return {}
@@ -96,11 +93,7 @@ class NbrAttentionEmbedding(Encoder):
     self.scope = scope
     self.is_train = is_train
     self.dropout = train_dropout
-    if emb_dim:
-      self.emb_dim = emb_dim
-    else:
-      # Keep embedding dimension same as input node embedding
-      self.emb_dim = self.input_dim
+    self.emb_dim = emb_dim if emb_dim else self.input_dim
     with tf.variable_scope(scope):
       if proj_w:
         self.proj_w = proj_w
@@ -110,7 +103,7 @@ class NbrAttentionEmbedding(Encoder):
             initializer=tf.glorot_uniform_initializer()
         )
     if not proj_w:
-      utils.add_variable_summaries(self.proj_w, self.scope + "/W_attention")
+      utils.add_variable_summaries(self.proj_w, f"{self.scope}/W_attention")
 
   def attend(self, node, neighbors, query, nbr_mask, name=""):
     """Bilinear attention with a diagonal matrix of query."""
@@ -124,19 +117,18 @@ class NbrAttentionEmbedding(Encoder):
     self.add_to_collection("attention_probs", attention_probs)
     # add summary to monitor attention weights
     utils.add_histogram_summary(attention_probs,
-                                self.scope + "/" + name + "/attention_probs")
+                                f"{self.scope}/{name}/attention_probs")
     attention_emb = tf.reduce_sum(
         tf.expand_dims(attention_probs, -1) * neighbors, 1
     )
     # Now concat attention_emb with node embedding and then project to emb_dim
     concat_emb = tf.concat([node, attention_emb], -1)
     output_emb = tf.matmul(concat_emb, self.proj_w)
-    output = tf.cond(
+    return tf.cond(
         self.is_train,
         lambda: tf.nn.dropout(output_emb, self.dropout, name="dropout"),
-        lambda: output_emb
+        lambda: output_emb,
     )
-    return output
 
   def make_feed_dict(self):
     return {}
@@ -153,11 +145,7 @@ class SigmoidNbrAttentionEmbedding(Encoder):
     self.is_train = is_train
     self.dropout = train_dropout
     self.average = average
-    if emb_dim:
-      self.emb_dim = emb_dim
-    else:
-      # Keep embedding dimension same as input node embedding
-      self.emb_dim = self.input_dim
+    self.emb_dim = emb_dim if emb_dim else self.input_dim
     with tf.variable_scope(scope):
       if proj_w:
         self.proj_w = proj_w
@@ -167,7 +155,7 @@ class SigmoidNbrAttentionEmbedding(Encoder):
             initializer=tf.glorot_uniform_initializer()
         )
     if not proj_w:
-      utils.add_variable_summaries(self.proj_w, self.scope + "/W_attention")
+      utils.add_variable_summaries(self.proj_w, f"{self.scope}/W_attention")
 
   def attend(self, node, neighbors, query, nbr_mask, name=""):
     """Bilinear attention with a diagonal matrix of query."""
@@ -180,7 +168,7 @@ class SigmoidNbrAttentionEmbedding(Encoder):
     self.add_to_collection("attention_probs", attention_probs)
     # add summary to monitor attention weights
     utils.add_histogram_summary(attention_probs,
-                                self.scope + "/" + name + "/attention_probs")
+                                f"{self.scope}/{name}/attention_probs")
     attention_emb = tf.reduce_sum(
         tf.expand_dims(attention_probs, -1) * neighbors, 1
     )
@@ -193,12 +181,11 @@ class SigmoidNbrAttentionEmbedding(Encoder):
     # Now concat attention_emb with node embedding and then project to emb_dim
     concat_emb = tf.concat([node, attention_emb], -1)
     output_emb = tf.matmul(concat_emb, self.proj_w)
-    output = tf.cond(
+    return tf.cond(
         self.is_train,
         lambda: tf.nn.dropout(output_emb, self.dropout, name="dropout"),
-        lambda: output_emb
+        lambda: output_emb,
     )
-    return output
 
   def make_feed_dict(self):
     return {}
@@ -217,11 +204,7 @@ class CosineNbrAttentionEmbedding(Encoder):
     self.scope = scope
     self.is_train = is_train
     self.dropout = train_dropout
-    if emb_dim:
-      self.emb_dim = emb_dim
-    else:
-      # Keep embedding dimension same as input node embedding
-      self.emb_dim = self.input_dim
+    self.emb_dim = emb_dim if emb_dim else self.input_dim
     with tf.variable_scope(scope):
       if proj_e:
         self.proj_e = proj_e
@@ -238,7 +221,7 @@ class CosineNbrAttentionEmbedding(Encoder):
             initializer=tf.glorot_uniform_initializer()
         )
     if not proj_w:
-      utils.add_variable_summaries(self.proj_w, self.scope + "/W_attention")
+      utils.add_variable_summaries(self.proj_w, f"{self.scope}/W_attention")
 
   def attend(self, node, neighbors, query, nbr_mask, name=""):
     """Bilinear attention with a diagonal matrix of query."""
@@ -254,20 +237,18 @@ class CosineNbrAttentionEmbedding(Encoder):
     self.add_to_collection("attention_probs", attention_probs)
     # add summary to monitor attention weights
     utils.add_histogram_summary(attention_probs,
-                                self.scope + "/" + name + "/attention_probs")
+                                f"{self.scope}/{name}/attention_probs")
     attention_emb = tf.reduce_sum(
         tf.expand_dims(attention_probs, -1) * neighbors, 1
     )
     # Now concat attention_emb with node embedding and then project to emb_dim
     concat_emb = tf.concat([node, attention_emb], -1)
     output_emb = tf.matmul(concat_emb, self.proj_w)
-    output = tf.cond(
+    return tf.cond(
         self.is_train,
         lambda: tf.nn.dropout(output_emb, self.dropout, name="dropout"),
-        lambda: output_emb
+        lambda: output_emb,
     )
-
-    return output
 
   def make_feed_dict(self):
     return {}
@@ -288,7 +269,7 @@ class RelAttentionEmbedding(NbrAttentionEmbedding):
     self.add_to_collection("attention_probs", attention_probs)
     # add summary to monitor attention weights
     utils.add_histogram_summary(attention_probs,
-                                self.scope + "/" + name + "/attention_probs")
+                                f"{self.scope}/{name}/attention_probs")
     return attention_probs
 
   def attend(self, node, neighbors, query, nbr_mask, name=""):
@@ -301,12 +282,11 @@ class RelAttentionEmbedding(NbrAttentionEmbedding):
     # Now concat attention_emb with node embedding and then project to emb_dim
     concat_emb = tf.concat([node, attention_emb], -1)
     output_emb = tf.matmul(concat_emb, self.proj_w)
-    output = tf.cond(
+    return tf.cond(
         self.is_train,
         lambda: tf.nn.dropout(output_emb, self.dropout, name="dropout"),
-        lambda: output_emb
+        lambda: output_emb,
     )
-    return output
 
   def make_feed_dict(self):
     return {}
@@ -360,12 +340,11 @@ class EmbedAlternateSeq(Encoder):
     embedding_layer = tf.nn.embedding_lookup(
         embeddings, inputs
     )
-    output = tf.cond(
+    return tf.cond(
         self.is_train,
         lambda: tf.nn.dropout(embedding_layer, self.dropout, name="dropout"),
-        lambda: embedding_layer
+        lambda: embedding_layer,
     )
-    return output
 
   def embed(self, inputs):
     """Embed the input."""
@@ -378,12 +357,11 @@ class EmbedAlternateSeq(Encoder):
         final_embeddings_flat,
         tf.concat([tf.shape(seq_embeddings)[:2], [self.emb_dim]], 0)
     )
-    output = tf.cond(
+    return tf.cond(
         self.is_train,
         lambda: tf.nn.dropout(final_embeddings, self.dropout, name="dropout"),
-        lambda: final_embeddings
+        lambda: final_embeddings,
     )
-    return output
 
 
 class AverageSeqEncoder(Encoder):
@@ -498,12 +476,11 @@ class ConvSeqEncoder(Encoder):
     out_mask = tf.greater(tf.reduce_sum(mask, -1, keep_dims=True), 0)
     out_mask = tf.cast(out_mask, tf.float32)
     conv_embedding = conv_embedding * out_mask
-    output = tf.cond(
+    return tf.cond(
         self.is_train,
         lambda: tf.nn.dropout(conv_embedding, self.dropout, name="dropout"),
-        lambda: conv_embedding
+        lambda: conv_embedding,
     )
-    return output
 
 
 class ConvTextEncoder(Encoder):
@@ -534,6 +511,5 @@ class ConvTextEncoder(Encoder):
 
   def embed(self, inputs, mask):
     word_embeddings = self.word_embedding_encoder.lookup(inputs)
-    output = self.cnn_encoder.embed(word_embeddings, mask)
-    return output
+    return self.cnn_encoder.embed(word_embeddings, mask)
 

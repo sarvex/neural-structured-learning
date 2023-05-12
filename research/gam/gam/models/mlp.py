@@ -80,16 +80,17 @@ class MLP(Model):
     hidden = inputs
     for layer_index, output_size in enumerate(self.hidden_sizes):
       input_size = hidden.get_shape().dims[-1].value
-      weights_name = 'W_' + str(layer_index)
+      weights_name = f'W_{str(layer_index)}'
       weights = tf.get_variable(
           name=weights_name,
           initializer=glorot((input_size, output_size)),
           use_resource=True)
       reg_params[weights_name] = weights
       biases = tf.get_variable(
-          'b_' + str(layer_index),
+          f'b_{str(layer_index)}',
           initializer=tf.zeros([output_size], dtype=tf.float32),
-          use_resource=True)
+          use_resource=True,
+      )
       hidden = self.activation(tf.nn.xw_plus_b(hidden, weights, biases))
     return hidden, reg_params
 
@@ -159,7 +160,7 @@ class MLP(Model):
     reg_params = {}
 
     # Build layers.
-    with tf.variable_scope(self.name + '/prediction'):
+    with tf.variable_scope(f'{self.name}/prediction'):
       input_size = encoding.get_shape().dims[-1].value
       weights = tf.get_variable(
           'W_outputs',
@@ -215,7 +216,7 @@ class MLP(Model):
       loss: The cummulated loss value.
     """
     reg_params = reg_params if reg_params is not None else {}
-    weight_decay = kwargs['weight_decay'] if 'weight_decay' in kwargs else None
+    weight_decay = kwargs.get('weight_decay', None)
 
     with tf.name_scope(name_scope):
       # Cross entropy error.

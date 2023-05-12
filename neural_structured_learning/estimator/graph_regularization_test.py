@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for nsl.estimator.graph_regularization."""
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -35,7 +36,7 @@ FEATURE_NAME = 'x'
 LABEL_NAME = 'y'
 NBR_FEATURE_PREFIX = 'NL_nbr_'
 NBR_WEIGHT_SUFFIX = '_weight'
-WEIGHT_VARIABLE = 'linear/linear_model/' + FEATURE_NAME + '/weights'
+WEIGHT_VARIABLE = f'linear/linear_model/{FEATURE_NAME}/weights'
 BIAS_VARIABLE = 'linear/linear_model/bias_weights'
 LEARNING_RATE = 0.01
 
@@ -56,8 +57,8 @@ def make_feature_spec(input_shape, max_neighbors):
           tf.FixedLenFeature([1], tf.float32, default_value=tf.constant([0.0])),
   }
   for i in range(max_neighbors):
-    nbr_feature_key = '{}{}_{}'.format(NBR_FEATURE_PREFIX, i, FEATURE_NAME)
-    nbr_weight_key = '{}{}{}'.format(NBR_FEATURE_PREFIX, i, NBR_WEIGHT_SUFFIX)
+    nbr_feature_key = f'{NBR_FEATURE_PREFIX}{i}_{FEATURE_NAME}'
+    nbr_weight_key = f'{NBR_FEATURE_PREFIX}{i}{NBR_WEIGHT_SUFFIX}'
     feature_spec[nbr_feature_key] = tf.FixedLenFeature(input_shape, tf.float32)
     feature_spec[nbr_weight_key] = tf.FixedLenFeature([1],
                                                       tf.float32,

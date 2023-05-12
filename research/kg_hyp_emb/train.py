@@ -58,7 +58,7 @@ def main(_):
       write_mode = 'a'
     stream = open(os.path.join(FLAGS.save_dir, 'train.log'), write_mode)
     log_handler = native_logging.StreamHandler(stream)
-    print('Saving logs in {}'.format(FLAGS.save_dir))
+    print(f'Saving logs in {FLAGS.save_dir}')
   else:
     log_handler = native_logging.StreamHandler(sys.stdout)
   formatter = native_logging.Formatter(
@@ -111,11 +111,7 @@ def main(_):
   best_mrr = None
   best_epoch = None
   best_weights = None
-  if FLAGS.save_model:
-    epoch = ckpt.step
-  else:
-    epoch = 0
-
+  epoch = ckpt.step if FLAGS.save_model else 0
   if int(epoch) < FLAGS.max_epochs:
     while int(epoch) < FLAGS.max_epochs:
       if FLAGS.save_model:
